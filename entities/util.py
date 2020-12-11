@@ -4,7 +4,10 @@ def formatDate( date ):
 
 def objectToItemAtr( obj ):
   if type( obj ) == str:
-    return { 'S': obj }
+    if obj == 'None':
+      return { 'NULL': True }
+    else: 
+      return { 'S': obj }
   if type( obj ) == float or type( obj ) == int:
     return { 'N': str( obj ) }
   if type( obj ) == bool:

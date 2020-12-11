@@ -34,7 +34,7 @@ class Location:
   def toItem( self ):
     return( {
       **self.key(),
-      'Type': { 'S': 'Location' },
+      'Type': { 'S': 'location' },
       'Country': { 'S': self.country },
       'Region': { 'S': self.region },
       'City': { 'S': self.city },
@@ -42,7 +42,7 @@ class Location:
       'Longitude': { 'N': str( self.longitude ) },
       'PostalCode': { 'S': self.postalCode },
       'TimeZone': { 'S': self.timeZone },
-      'Domains': { 'SS': self.timeZone },
+      'Domains': { 'SS': self.domains },
       'AutonomousSystem': objectToItemAtr( self.autonomousSystem ),
       'ISP': { 'S': self.isp },
       'Proxy': { 'BOOL': self.proxy },

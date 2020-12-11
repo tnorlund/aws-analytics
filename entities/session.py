@@ -32,6 +32,7 @@ class Session:
     return( {
       **self.key(),
       **self.gsi2(),
+      'Type': { 'S': 'session' },
       'AverageTime': { 'N': str( self.avgTime ) },
       'TotalTime': { 'N': str( self.totalTime ) }
     } )

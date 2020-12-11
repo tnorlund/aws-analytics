@@ -55,7 +55,7 @@ class Visit:
       **self.key(),
       **self.gsi1(),
       **self.gsi2(),
-      'Type': { 'S': 'Visit' },
+      'Type': { 'S': 'visit' },
       'User': { 'N': f'{self.user}' },
       'Title': { 'S': self.title },
       'Slug': { 'S': self.slug },
@@ -63,7 +63,7 @@ class Visit:
       'PreviousSlug': objectToItemAtr( self.prevSlug ),
       'NextTitle': objectToItemAtr( self.nextTitle ),
       'NextSlug': objectToItemAtr( self.nextSlug ),
-      'TimeOnPage': { 'N': str( self.timeOnPage ) }
+      'TimeOnPage': objectToItemAtr( self.timeOnPage )
     } )
 
   def __repr__( self ):
@@ -80,8 +80,3 @@ class Visit:
     yield 'nextTitle', self.nextTitle
     yield 'nextSlug', self.nextSlug
     yield 'timeOnPage', self.timeOnPage
-
-# def itemToVisit( item ):
-#     return Visit(
-#         item.Date
-#     )

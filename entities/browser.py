@@ -137,7 +137,7 @@ class Browser:
   def toItem( self ):
     return( {
       **self.key(),
-      'Type': { 'S': 'Browser' },
+      'Type': { 'S': 'browser' },
       'App': objectToItemAtr( self.app ),
       'Device': objectToItemAtr( self.device ),
       'DeviceType': objectToItemAtr( self.type ),

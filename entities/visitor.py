@@ -15,5 +15,6 @@ class Visitor:
   def toItem( self ):
     return( {
       **self.key(),
+      'Type': { 'S': 'visitor' },
       'NumberSessions': { 'N': str( self.numberSessions ) }
     } )
