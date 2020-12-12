@@ -4,7 +4,8 @@ from .util import objectToItemAtr, formatDate
 class Location:
   def __init__( 
     self, ip, country, region, city, latitude, longitude, postalCode, timezone,
-    domains,autonomousSystem, isp, proxy, vpn, tor 
+    domains, autonomousSystem, isp, proxy, vpn, tor,
+    dateAdded = datetime.datetime.now()
   ):
     self.ip = ip
     self.country = country
@@ -20,7 +21,7 @@ class Location:
     self.proxy = proxy
     self.vpn = vpn
     self.tor = tor
-    self.dateAdded = datetime.datetime.now()
+    self.dateAdded = dateAdded
 
   def key( self ):
     return( {
@@ -78,4 +79,29 @@ def requestToLocation( req ):
     req['location']['postalCode'], req['location']['timezone'], req['domains'],
     req['as'] if 'as' in req else None, req['isp'], req['proxy']['proxy'], 
     req['proxy']['vpn'], req['proxy']['tor'] 
+  )
+
+def itemToLocation( item ):
+  return Location(
+    item['PK']['S'].split('#')[1], item['Country']['S'], item['Region']['S'],
+    item['City']['S'], float( item['Latitude']['N'] ),
+    float( item['Longitude']['N'] ), item['PostalCode']['S'],
+    item['TimeZone']['S'], item['Domains']['SS'],
+    {
+      **{ 
+        key: int( value['N'] )
+        for (key, value) in item['AutonomousSystem']['M'].items()
+        if 'N' in value.keys()
+      },
+      **{
+        key: value['S'] 
+        for (key, value) in item['AutonomousSystem']['M'].items()
+        if 'S' in value.keys() 
+      }
+    },
+    item['ISP']['S'], item['Proxy']['BOOL'], item['VPN']['BOOL'], 
+    item['TOR']['BOOL'],
+    datetime.datetime.strptime(
+      item['DateAdded']['S'], '%Y-%m-%dT%H:%M:%S.%fZ'
+    )
   )

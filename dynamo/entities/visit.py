@@ -80,3 +80,25 @@ class Visit:
     yield 'nextTitle', self.nextTitle
     yield 'nextSlug', self.nextSlug
     yield 'timeOnPage', self.timeOnPage
+
+def itemToVisit( item ):
+  return Visit(
+    item['SK']['S'].split('#')[1], item['PK']['S'].split('#')[1], 
+    int( item['User']['N'] ), item['Title']['S'], item['Slug']['S'],
+    item['GSI2PK']['S'].split('#')[2], 
+    np.nan  
+      if 'NULL' in item['TimeOnPage'] 
+      else float( item['TimeOnPage']['N'] ),
+    None 
+      if 'NULL' in item['PreviousTitle'].keys()
+      else  item['PreviousTitle']['S'],
+    None 
+      if 'NULL' in item['PreviousSlug'].keys() 
+      else  item['PreviousSlug']['S'],
+    None 
+      if 'NULL' in item['NextTitle'].keys() 
+      else  item['NextTitle']['S'],
+    None 
+      if 'NULL' in item['NextSlug'].keys() 
+      else  item['NextSlug']['S']
+  )

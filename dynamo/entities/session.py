@@ -6,7 +6,9 @@ class Session:
   def __init__(
     self, sessionStart, ip, avgTime, totalTime
   ):
-    self.sessionStart = datetime.datetime.strptime( sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ' ) if type( sessionStart ) == str else sessionStart
+    self.sessionStart = datetime.datetime.strptime(
+      sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ'
+    ) if type( sessionStart ) == str else sessionStart
     self.ip = ip
     self.avgTime = avgTime
     self.totalTime = totalTime
@@ -39,3 +41,12 @@ class Session:
 
   def __repr__( self ):
     return( f'{ self.ip } - { self.totalTime }' )
+
+def itemToSession( item ):
+  return Session(
+    datetime.datetime.strptime(
+      item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
+    ), item['PK']['S'].split('#')[1], 
+    float( item['AverageTime']['N'] ),
+    float( item['TotalTime']['N'] )
+  )

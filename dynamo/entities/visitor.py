@@ -1,6 +1,6 @@
 class Visitor:
   def __init__( self, ip, numberSessions = 0 ):
-    self.ip = ip,
+    self.ip = ip
     self.numberSessions = numberSessions
 
   def key( self ):
@@ -18,3 +18,12 @@ class Visitor:
       'Type': { 'S': 'visitor' },
       'NumberSessions': { 'N': str( self.numberSessions ) }
     } )
+
+  def __repr__( self ):
+    return f"{ self.ip } - { self.numberSessions }"
+
+def itemToVisitor( item ):
+  return Visitor( 
+    item['PK']['S'].split('#')[1], 
+    int( item['NumberSessions']['N'] ) 
+  )

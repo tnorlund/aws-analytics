@@ -3,7 +3,11 @@ import datetime
 from .util import objectToItemAtr, formatDate
 
 class Browser:
-  def __init__( self, app, ip ):
+  def __init__(
+    self, app, ip, device = None, deviceType = None, browser = None,
+    os = None,  webkit = None, version = None, 
+    dateAdded = datetime.datetime.now()
+  ):
     # Mac - Safari
     if re.match( 
       r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
@@ -25,7 +29,7 @@ class Browser:
       self.webkit = match.group(2)
       self.version = match.group(3)
       self.ip = ip
-      self.dateAdded = datetime.datetime.now()
+      self.dateAdded = dateAdded
     # Mac - Chrome
     elif re.match(
       r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
@@ -47,7 +51,7 @@ class Browser:
       self.webkit = match.group(2)
       self.version = match.group(3)
       self.ip = ip
-      self.dateAdded = datetime.datetime.now()
+      self.dateAdded = dateAdded
     # Windows - Chrome
     elif re.match(
       r"Mozilla\/5\.0 \(Windows NT (\d+\.\d+); Win64; x64\) AppleWebKit" + \
@@ -69,7 +73,7 @@ class Browser:
       self.webkit = match.group(2)
       self.version = match.group(3)
       self.ip = ip
-      self.dateAdded = datetime.datetime.now()
+      self.dateAdded = dateAdded
     # iPhone - Safari
     elif re.match(
       r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
@@ -91,7 +95,7 @@ class Browser:
       self.webkit = match.group(2)
       self.version = match.group(3)
       self.ip = ip
-      self.dateAdded = datetime.datetime.now()
+      self.dateAdded = dateAdded
     # iPhone - App
     elif re.match(
       r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
@@ -113,17 +117,17 @@ class Browser:
       self.webkit = match.group(2)
       self.version = None
       self.ip = ip
-      self.dateAdded = datetime.datetime.now()
+      self.dateAdded = dateAdded
     else:
       self.app = app
-      self.device = None
-      self.type = None
-      self.browser = None
-      self.os = None
-      self.webkit = None
-      self.version = None
+      self.device = device
+      self.type = deviceType
+      self.browser = browser
+      self.os = os
+      self.webkit = webkit
+      self.version = version
       self.ip = ip
-      self.dateAdded = datetime.datetime.now()
+      self.dateAdded = dateAdded
 
   def key( self ):
     return( {
@@ -149,3 +153,12 @@ class Browser:
   
   def __repr__( self ):
     return f"{ self.ip } - { self.browser }"
+
+def itemToBrowser( item ): 
+  return Browser(
+    item['App']['S'], item['PK']['S'].split('#')[1], item['Device']['S'],
+    item['Device']['S'], item['Browser']['S'], item['OS']['S'], 
+    item['Webkit']['S'], item['Version']['S'], datetime.datetime.strptime(
+      item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
+    )
+  )
