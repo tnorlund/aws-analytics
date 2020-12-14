@@ -10,11 +10,10 @@ class Visit:
   ):
     self.date = datetime.datetime.strptime( date, '%Y-%m-%dT%H:%M:%S.%fZ' )
     self.ip = ip
-    if user == 'None':
+    if user == 'None' or user is None:
       self.user = 0
     else:
       self.user = int( user )
-    # self.user = int( user ) if type( user ) == str or type( user ) == float  else None
     self.title = title
     self.slug = slug
     self.sessionStart = datetime.datetime.strptime( 

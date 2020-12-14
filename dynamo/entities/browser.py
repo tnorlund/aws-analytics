@@ -4,10 +4,15 @@ from .util import objectToItemAtr, formatDate
 
 class Browser:
   def __init__(
-    self, app, ip, device = None, deviceType = None, browser = None,
-    os = None,  webkit = None, version = None, 
-    dateAdded = datetime.datetime.now()
+    self, app, ip, width, height, dateVisited, device = None, 
+    deviceType = None, browser = None, os = None,  webkit = None,
+    version = None, dateAdded = datetime.datetime.now()
   ):
+    self.width = width
+    self.height = height
+    self.dateVisited = datetime.datetime.strptime( 
+      dateVisited, '%Y-%m-%dT%H:%M:%S.%fZ' 
+    )
     # Mac - Safari
     if re.match( 
       r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
@@ -132,7 +137,7 @@ class Browser:
   def key( self ):
     return( {
       'PK': { 'S': f'VISITOR#{ self.ip }' },
-      'SK': { 'S': f'VISIT#{ formatDate( self.dateAdded ) }' }
+      'SK': { 'S': f'VISIT#{ formatDate( self.dateVisited ) }' }
     } )
 
   def pk( self ):
@@ -143,12 +148,16 @@ class Browser:
       **self.key(),
       'Type': { 'S': 'browser' },
       'App': objectToItemAtr( self.app ),
+      'Width': objectToItemAtr( self.width ), 
+      'Height': objectToItemAtr( self.height ), 
+      'DateVisited': {'S': formatDate( self.dateVisited ) },
       'Device': objectToItemAtr( self.device ),
       'DeviceType': objectToItemAtr( self.type ),
       'Browser': objectToItemAtr( self.browser ),
       'OS': objectToItemAtr( self.os ),
       'Webkit': objectToItemAtr( self.webkit ),
-      'Version': objectToItemAtr( self.version )
+      'Version': objectToItemAtr( self.version ),
+      'DateAdded': objectToItemAtr( formatDate( self.dateAdded ) )
     } )
   
   def __repr__( self ):
@@ -156,8 +165,9 @@ class Browser:
 
 def itemToBrowser( item ): 
   return Browser(
-    item['App']['S'], item['PK']['S'].split('#')[1], item['Device']['S'],
-    item['Device']['S'], item['Browser']['S'], item['OS']['S'], 
+    item['App']['S'], item['PK']['S'].split('#')[1], item['Width']['N'],
+    item['Height']['S'], item['DateVisited']['S'], item['Device']['S'],
+    item['DeviceType']['S'], item['Browser']['S'], item['OS']['S'], 
     item['Webkit']['S'], item['Version']['S'], datetime.datetime.strptime(
       item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
     )

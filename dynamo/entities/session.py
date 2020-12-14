@@ -6,9 +6,11 @@ class Session:
   def __init__(
     self, sessionStart, ip, avgTime, totalTime
   ):
-    self.sessionStart = datetime.datetime.strptime(
-      sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ'
-    ) if type( sessionStart ) == str else sessionStart
+    self.sessionStart = sessionStart \
+      if type( sessionStart ) == datetime.datetime \
+      else datetime.datetime.strptime(
+        sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ'
+      )
     self.ip = ip
     self.avgTime = avgTime
     self.totalTime = totalTime
