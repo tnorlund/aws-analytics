@@ -31,6 +31,11 @@ class Session:
       }#{ formatDate( self.sessionStart ) }''' },
       'GSI2SK': { 'S': f'#SESSION' }
     } )
+
+  def gsi2pk( self ):
+    return { 'S': f'''SESSION#{
+      self.ip 
+    }#{ formatDate( self.sessionStart ) }''' }
   
   def toItem( self ):
     return( {
