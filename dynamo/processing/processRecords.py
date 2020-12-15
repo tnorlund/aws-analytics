@@ -1,9 +1,10 @@
-import os, sys
+import os
+import sys
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.entities import itemToVisitor, itemToVisit, itemToSession, \
-  itemToLocation, itemToBrowser
+from dynamo.entities import itemToVisitor, itemToVisit, itemToSession # pylint: disable=wrong-import-position
+from dynamo.entities import itemToLocation, itemToBrowser # pylint: disable=wrong-import-position
 
 def processRecords( records ):
   '''Processes the records for a DynamoDB Stream.

@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.entities import Session
+from dynamo.entities import Session # pylint: disable=wrong-import-position
 dynamo = boto3.client( 'dynamodb' )
 
 def addNewSession( visitor, browsers, visits ):
@@ -41,7 +41,7 @@ def addNewSession( visitor, browsers, visits ):
       visits[0].ip,
       np.mean( [
         visit.timeOnPage for visit in visits
-        if type(visit.timeOnPage) == float
+        if isinstance(visit.timeOnPage, float)
       ] ),
       ( visits[-1].date - visits[0].date ).total_seconds()
     )

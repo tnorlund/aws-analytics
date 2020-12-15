@@ -1,10 +1,11 @@
-import os, sys
+import os
+import sys
+import numpy as np
+import pandas as pd
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.entities import Visit
-import numpy as np
-import pandas as pd
+from dynamo.entities import Visit # pylint: disable=wrong-import-position
 
 def processVisits( visits ):
   '''Formats a list of visits to have the proper attributes.

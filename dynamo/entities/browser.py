@@ -141,7 +141,7 @@ class Browser:
     } )
 
   def pk( self ):
-    return( { 'S': f'VISITOR#{ self.ip }' } )
+    return { 'S': f'VISITOR#{ self.ip }' }
 
   def toItem( self ):
     return( {

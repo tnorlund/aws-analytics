@@ -5,7 +5,7 @@ from botocore.exceptions import ClientError
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.entities import itemToVisit, itemToSession
+from dynamo.entities import itemToVisit, itemToSession # pylint: disable=wrong-import-position
 
 dynamo = boto3.client( 'dynamodb' )
 

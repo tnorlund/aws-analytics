@@ -5,7 +5,7 @@ class Session:
   """A class to represent a visitor's session item for DynamoDB.
 
   Attributes
-  ---------- 
+  ----------
   sessionStart : datetime.datetime | str
     The datetime the visitor started at the website. This is used to provide a
     relationship to the visitor's session.
@@ -49,7 +49,7 @@ class Session:
       The total amount of time the user spent on the website.
     '''
     self.sessionStart = sessionStart \
-      if isinstance( sessionStart ) == datetime.datetime \
+      if isinstance( sessionStart, datetime.datetime ) \
       else datetime.datetime.strptime(
         sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ'
       )

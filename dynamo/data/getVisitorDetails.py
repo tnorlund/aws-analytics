@@ -4,8 +4,8 @@ import boto3
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.entities import itemToVisitor, itemToVisit, itemToSession, \
-  itemToLocation, itemToBrowser
+from dynamo.entities import itemToVisitor, itemToVisit, itemToSession # pylint: disable=wrong-import-position
+from dynamo.entities import itemToLocation, itemToBrowser # pylint: disable=wrong-import-position
 
 dynamo = boto3.client( 'dynamodb' )
 
@@ -54,6 +54,6 @@ def getVisitorDetails( visitor ):
           f'''Could not parse type: { item }'''
         )
     return data
-  except Exception as e:
+  except KeyError as e:
     print( f'ERROR getVisitorDetails: {e}')
     return { 'error': 'Could not get visitor from table' }

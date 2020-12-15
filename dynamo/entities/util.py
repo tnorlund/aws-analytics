@@ -12,7 +12,7 @@ def formatDate( date ):
     The formatted datetime string that is similar to JS's ISO standard.
   '''
   return date.strftime( '%Y-%m-%dT%H:%M:%S.' ) \
-    + date.strftime('%f')[:3] + 'Z' 
+    + date.strftime('%f')[:3] + 'Z'
 
 def objectToItemAtr( obj ):
   '''Formats any Python type to its respective DynamoDB syntax.
@@ -27,24 +27,22 @@ def objectToItemAtr( obj ):
   result : dict
     The DynamoDB syntax of the object.
   '''
-  if type( obj ) == str:
+  if isinstance( obj, str ):
     if obj == 'None':
       return { 'NULL': True }
-    else: 
-      return { 'S': obj }
-  if type( obj ) == float or type( obj ) == int:
+    return { 'S': obj }
+  if isinstance( obj, ( float, int ) ):
     return { 'N': str( obj ) }
-  if type( obj ) == bool:
+  if isinstance( obj, bool ):
     return { 'BOOL': obj }
-  if type( obj ) == dict:
-    return { 'M': { 
+  if isinstance( obj, dict ):
+    return { 'M': {
       key: objectToItemAtr( value )
-      for key, value in obj.items() 
+      for key, value in obj.items()
     } }
   if obj is None:
     return { 'NULL': True }
-  else:
-    raise Exception( 'Could not parse attribute: ', obj )
+  raise Exception( 'Could not parse attribute: ', obj )
 
 class toItemException( Exception ):
   '''Exception raised for errors parsing a DynamoDB item to its respective

@@ -1,11 +1,6 @@
 import os
-import sys
 import boto3
 from botocore.exceptions import ClientError
-sys.path.append(
-  os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
-)
-from dynamo.entities import Session
 
 dynamo = boto3.client( 'dynamodb' )
 
@@ -66,7 +61,7 @@ def addVisits( visits ):
   '''
   try:
     result = dynamo.batch_write_item(
-      RequestItems = { os.environ.get( 'TABLE_NAME' ): [ 
+      RequestItems = { os.environ.get( 'TABLE_NAME' ): [
         { 'PutRequest': { 'Item': visit.toItem() } }
         for visit in visits
       ] },

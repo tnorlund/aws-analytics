@@ -194,9 +194,9 @@ def requestToLocation( req ):
     return Location(
       req['ip'], req['location']['country'], req['location']['region'],
       req['location']['city'], req['location']['lat'], req['location']['lng'],
-      req['location']['postalCode'], req['location']['timezone'], req['domains'],
-      req['as'] if 'as' in req else None, req['isp'], req['proxy']['proxy'],
-      req['proxy']['vpn'], req['proxy']['tor']
+      req['location']['postalCode'], req['location']['timezone'],
+      req['domains'], req['as'] if 'as' in req else None, req['isp'],
+      req['proxy']['proxy'], req['proxy']['vpn'], req['proxy']['tor']
     )
   except Exception as e:
     print( f'ERROR requestToLocation: {e}' )

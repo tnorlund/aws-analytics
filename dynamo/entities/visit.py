@@ -94,7 +94,7 @@ class Visit:
     '''
     self.date = datetime.datetime.strptime(
       date, '%Y-%m-%dT%H:%M:%S.%fZ'
-    ) if type( date ) == str else date
+    ) if isinstance( date, str ) else date
     self.ip = ip
     if user == 'None' or user is None:
       self.user = 0
@@ -104,29 +104,29 @@ class Visit:
     self.slug = slug
     self.sessionStart = datetime.datetime.strptime(
       sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ'
-    ) if type( sessionStart ) == str else sessionStart
+    ) if isinstance( sessionStart, str ) else sessionStart
     self.prevTitle = prevTitle
     self.prevSlug = prevSlug
     self.nextTitle = nextTitle
     self.nextSlug = nextSlug
-    self.timeOnPage = timeOnPage if timeOnPage == timeOnPage else None
+    self.timeOnPage =  None if np.isnan( timeOnPage ) else timeOnPage
 
   def key( self ):
     '''Returns the Primary Key of the visit.
 
     This is used to retrieve the unique visit from the table.
     '''
-    return( {
+    return {
       'PK': { 'S': f'VISITOR#{ self.ip }' },
       'SK': { 'S': f'VISIT#{ formatDate( self.date ) }#{ self.slug }' }
-    } )
+    }
 
   def pk( self ):
     '''Returns the Partition Key of the visit.
 
     This is used to retrieve the visitor-specific data from the table.
     '''
-    return( { 'S': f'VISITOR#{ self.ip }' } )
+    return { 'S': f'VISITOR#{ self.ip }' }
 
   def gsi1( self ):
     '''Returns the Primary Key of the first Global Secondary Index of the
@@ -134,10 +134,10 @@ class Visit:
 
     This is used to retrieve the unique visit from the table.
     '''
-    return( {
+    return {
       'GSI1PK': { 'S': f'PAGE#{ self.slug }' },
       'GSI1SK': { 'S': f'VISIT#{ formatDate( self.date ) }' }
-    } )
+    }
 
   def gsi1pk( self ):
     '''Returns the Partition Key of the first Global Secondary Index of the
