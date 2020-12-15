@@ -4,23 +4,23 @@ from .util import objectToItemAtr, formatDate
 
 class Browser:
   def __init__(
-    self, app, ip, width, height, dateVisited, device = None, 
+    self, app, ip, width, height, dateVisited, device = None,
     deviceType = None, browser = None, os = None,  webkit = None,
     version = None, dateAdded = datetime.datetime.now()
   ):
     self.width = width
     self.height = height
-    self.dateVisited = datetime.datetime.strptime( 
-      dateVisited, '%Y-%m-%dT%H:%M:%S.%fZ' 
+    self.dateVisited = datetime.datetime.strptime(
+      dateVisited, '%Y-%m-%dT%H:%M:%S.%fZ'
     )
     # Mac - Safari
-    if re.match( 
+    if re.match(
       r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
       r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
       r"(\d+\.\d+\.\d+) Safari\/(\d+\.\d+\.\d+)",
       app
     ):
-      match = re.match( 
+      match = re.match(
         r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) "  + \
         r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
         r"(\d+\.\d+\.\d+) Safari\/(\d+\.\d+\.\d+)",
@@ -61,7 +61,7 @@ class Browser:
     elif re.match(
       r"Mozilla\/5\.0 \(Windows NT (\d+\.\d+); Win64; x64\) AppleWebKit" + \
       r"\/(\d+\.\d+) \(KHTML, like Gecko\) Chrome\/(\d+\.\d+\.\d+\.\d+) " + \
-      r"Safari\/(\d+\.\d+)", 
+      r"Safari\/(\d+\.\d+)",
       app
     ):
       match = re.match(
@@ -142,14 +142,14 @@ class Browser:
 
   def pk( self ):
     return( { 'S': f'VISITOR#{ self.ip }' } )
-  
+
   def toItem( self ):
     return( {
       **self.key(),
       'Type': { 'S': 'browser' },
       'App': objectToItemAtr( self.app ),
-      'Width': objectToItemAtr( self.width ), 
-      'Height': objectToItemAtr( self.height ), 
+      'Width': objectToItemAtr( self.width ),
+      'Height': objectToItemAtr( self.height ),
       'DateVisited': {'S': formatDate( self.dateVisited ) },
       'Device': objectToItemAtr( self.device ),
       'DeviceType': objectToItemAtr( self.type ),
@@ -159,20 +159,20 @@ class Browser:
       'Version': objectToItemAtr( self.version ),
       'DateAdded': objectToItemAtr( formatDate( self.dateAdded ) )
     } )
-  
+
   def __repr__( self ):
     return f"{ self.ip } - { self.browser }"
 
-def itemToBrowser( item ): 
+def itemToBrowser( item ):
   return Browser(
     item['App']['S'], item['PK']['S'].split('#')[1], item['Width']['N'],
-    item['Height']['N'], item['DateVisited']['S'], 
+    item['Height']['N'], item['DateVisited']['S'],
     None if 'NULL' in item['Device'].keys() else item['Device']['S'],
-    None if 'NULL' in item['DeviceType'].keys() else item['DeviceType']['S'], 
-    None if 'NULL' in item['Browser'].keys() else item['Browser']['S'], 
-    None if 'NULL' in item['OS'].keys() else item['OS']['S'], 
-    None if 'NULL' in item['Webkit'].keys() else item['Webkit']['S'], 
-    None if 'NULL' in item['Version'].keys() else item['Version']['S'], 
+    None if 'NULL' in item['DeviceType'].keys() else item['DeviceType']['S'],
+    None if 'NULL' in item['Browser'].keys() else item['Browser']['S'],
+    None if 'NULL' in item['OS'].keys() else item['OS']['S'],
+    None if 'NULL' in item['Webkit'].keys() else item['Webkit']['S'],
+    None if 'NULL' in item['Version'].keys() else item['Version']['S'],
     datetime.datetime.strptime(
       item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
     )

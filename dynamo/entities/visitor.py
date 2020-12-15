@@ -1,29 +1,94 @@
+from .util import toItemException
+
 class Visitor:
+  '''A class to represent a visitor item for DynamoDB.
+
+  Attributes
+  ----------
+  ip : str
+    The IP address of the visitor.
+  numberSessions : int
+    The number of unique the sessions the visitor has made.
+
+  Methods
+  -------
+  key():
+    Returns the Primary Key of the visitor.
+  pk():
+    Returns the Partition Key of the visitor.
+  toItem():
+    Returns the visitor as a parsed DynamoDB item.
+  '''
   def __init__( self, ip, numberSessions = 0 ):
+    '''Constructs the necessary attributes for the visitor object.
+
+    Parameters
+    ----------
+    ip : str
+      The IP address of the visitor.
+    numberSessions : int, optional
+      The number of unique the sessions the visitor has made. (default is 0)
+    '''
     self.ip = ip
     self.numberSessions = numberSessions
 
   def key( self ):
-    return( {
+    '''Returns the Primary Key of the visitor.
+
+    This is used to retrieve the unique visitor from the table.
+    '''
+    return {
       'PK': { 'S': f'VISITOR#{ self.ip }' },
       'SK': { 'S': '#VISITOR' }
-    } )
-  
+    }
+
   def pk( self ):
-    return( { 'S': f'VISITOR#{ self.ip }' } )
+    '''Returns the Partition Key of the visit.
+
+    This is used to retrieve the visitor-specific data from the table.
+    '''
+    return { 'S': f'VISITOR#{ self.ip }' }
 
   def toItem( self ):
-    return( {
+    """Returns the visitor as a parsed DynamoDB item.
+
+    Returns
+    -------
+    item : dict
+      The visit in DynamoDB syntax.
+    """
+    return {
       **self.key(),
       'Type': { 'S': 'visitor' },
       'NumberSessions': { 'N': str( self.numberSessions ) }
-    } )
+    }
 
   def __repr__( self ):
     return f"{ self.ip } - { self.numberSessions }"
 
 def itemToVisitor( item ):
-  return Visitor( 
-    item['PK']['S'].split('#')[1], 
-    int( item['NumberSessions']['N'] ) 
-  )
+  '''Parses a DynamoDB item as a visitor object.
+
+  Parameters
+  ----------
+  item : dict
+    The raw DynamoDB item.
+
+  Raises
+  ------
+  toItemException
+    When the item is missing the required keys to parse into an object.
+
+  Returns
+  -------
+  visitor : Visitor
+    The visitor object parsed from the raw DynamoDB item.
+  '''
+  try:
+    return Visitor(
+      item['PK']['S'].split('#')[1],
+      int( item['NumberSessions']['N'] )
+    )
+  except Exception as e:
+    print( f'ERROR itemToVisitor: {e}' )
+    raise toItemException( 'visitor' ) from e

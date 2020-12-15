@@ -1,12 +1,93 @@
 import datetime
-from .util import objectToItemAtr, formatDate
+from .util import objectToItemAtr, formatDate, toItemException
 
 class Location:
-  def __init__( 
+  '''A class to represent the visitor's location item for DynamoDB.
+
+  Attributes
+  ----------
+  ip : str
+    The IP address of the visitor.
+  country : str
+    The country the IP address is associated with.
+  region : str
+    The region the IP address is associated with. When the IP is located in the
+    US, the region is the state.
+  city : str
+    The city the IP address is associated with.
+  latitude : float
+    The latitude the IP address is associated with.
+  longitude : float
+    The longitude the IP address is associated with.
+  postalCode : str
+    The postal code the IP address is associated with.
+  timezone : str
+    The time zone the IP address is associated with.
+  domains : list[ str ]
+    The domains the IP address is associated with.
+  autonomousSystem : dict
+    The routing data the IP address is associated with.
+  isp : str
+    The Internet service provider the IP address is associated with.
+  proxy : bool
+    Whether the IP address is used as a proxy.
+  vpn : bool
+    Whether the IP address is a VPN endpoint.
+  tor : bool
+    Whether the IP address is a TOR endpoint.
+  dateAdded : datetime.datetime
+    The datetime the location was added to the table.
+
+  Methods
+  -------
+  key():
+    Returns the Primary Key of the location.
+  pk():
+    Returns the Partition Key of the location.
+  toItem():
+    Returns the location as a parsed DynamoDB item.
+  '''
+  def __init__(
     self, ip, country, region, city, latitude, longitude, postalCode, timezone,
     domains, autonomousSystem, isp, proxy, vpn, tor,
     dateAdded = datetime.datetime.now()
   ):
+    '''Constructs the necessary attributes for the location object.
+
+    Parameters
+    ----------
+    ip : str
+      The IP address of the visitor.
+    country : str
+      The country the IP address is associated with.
+    region : str
+      The region the IP address is associated with. When the IP is located in
+      the US, the region is the state.
+    city : str
+      The city the IP address is associated with.
+    latitude : float
+      The latitude the IP address is associated with.
+    longitude : float
+      The longitude the IP address is associated with.
+    postalCode : str
+      The postal code the IP address is associated with.
+    timezone : str
+      The time zone the IP address is associated with.
+    domains : list[ str ]
+      The domains the IP address is associated with.
+    autonomousSystem : dict
+      The routing data the IP address is associated with.
+    isp : str
+      The Internet service provider the IP address is associated with.
+    proxy : bool
+      Whether the IP address is used as a proxy.
+    vpn : bool
+      Whether the IP address is a VPN endpoint.
+    tor : bool
+      Whether the IP address is a TOR endpoint.
+    dateAdded : datetime.datetime
+      The datetime the location was added to the table.
+    '''
     self.ip = ip
     self.country = country
     self.region = region
@@ -24,16 +105,31 @@ class Location:
     self.dateAdded = dateAdded
 
   def key( self ):
-    return( {
+    '''Returns the Primary Key of the location.
+
+    This is used to retrieve the unique session from the table.
+    '''
+    return {
       'PK': { 'S': f'VISITOR#{ self.ip }' },
       'SK': { 'S': '#LOCATION' }
-    } )
+    }
 
   def pk( self ):
-    return( {'S': f'VISITOR#{ self.ip }' } )
+    '''Returns the Partition Key of the location.
+
+    This is used to retrieve the visitor-specific data from the table.
+    '''
+    return { 'S': f'VISITOR#{ self.ip }' }
 
   def toItem( self ):
-    return( {
+    '''Returns the location as a parsed DynamoDB item.
+
+    Returns
+    -------
+    item : dict
+      The location in DynamoDB syntax.
+    '''
+    return {
       **self.key(),
       'Type': { 'S': 'location' },
       'Country': { 'S': self.country },
@@ -50,11 +146,11 @@ class Location:
       'VPN': { 'BOOL': self.vpn },
       'TOR': { 'BOOL': self.tor },
       'DateAdded': { 'S': formatDate( self.dateAdded ) }
-    } )
+    }
 
   def __repr__( self ):
     return f"{ self.ip } - { self.city }"
-  
+
   def __iter__( self ):
     yield 'ip', self.ip
     yield 'country', self.country
@@ -73,35 +169,81 @@ class Location:
     yield 'dateAdded', self.dateAdded
 
 def requestToLocation( req ):
-  return Location(
-    req['ip'], req['location']['country'], req['location']['region'],
-    req['location']['city'], req['location']['lat'], req['location']['lng'],
-    req['location']['postalCode'], req['location']['timezone'], req['domains'],
-    req['as'] if 'as' in req else None, req['isp'], req['proxy']['proxy'], 
-    req['proxy']['vpn'], req['proxy']['tor'] 
-  )
+  '''Parses the JSON formatted GET request ipify gives.
+
+  ipify gives IP Geolocation and IP Proxy data based on the visitor's IP
+  address. This request is then used to store in the DynamoDB table.
+  The (API)[https://www.ipify.org] has great documentation and is easy to use.
+
+  Parameters
+  ----------
+  req : dict
+    The result of the ipify GET request.
+
+  Raises
+  ------
+  toItemException
+    When the item is missing the required keys to parse into an object.
+
+  Returns
+  -------
+  location : Location
+    The location object parsed from the ipify GET request.
+  '''
+  try:
+    return Location(
+      req['ip'], req['location']['country'], req['location']['region'],
+      req['location']['city'], req['location']['lat'], req['location']['lng'],
+      req['location']['postalCode'], req['location']['timezone'], req['domains'],
+      req['as'] if 'as' in req else None, req['isp'], req['proxy']['proxy'],
+      req['proxy']['vpn'], req['proxy']['tor']
+    )
+  except Exception as e:
+    print( f'ERROR requestToLocation: {e}' )
+    raise toItemException( 'location' ) from e
 
 def itemToLocation( item ):
-  return Location(
-    item['PK']['S'].split('#')[1], item['Country']['S'], item['Region']['S'],
-    item['City']['S'], float( item['Latitude']['N'] ),
-    float( item['Longitude']['N'] ), item['PostalCode']['S'],
-    item['TimeZone']['S'], item['Domains']['SS'],
-    {
-      **{ 
-        key: int( value['N'] )
-        for (key, value) in item['AutonomousSystem']['M'].items()
-        if 'N' in value.keys()
+  '''Parses a DynamoDB item as a location object.
+
+  Parameters
+  ----------
+  item : dict
+    The raw DynamoDB item.
+
+  Raises
+  ------
+  toItemException
+    When the item is missing the required keys to parse into an object.
+
+  Returns
+  -------
+  location : Location
+    The location object parsed from the raw DynamoDB item.
+  '''
+  try:
+    return Location(
+      item['PK']['S'].split('#')[1], item['Country']['S'], item['Region']['S'],
+      item['City']['S'], float( item['Latitude']['N'] ),
+      float( item['Longitude']['N'] ), item['PostalCode']['S'],
+      item['TimeZone']['S'], item['Domains']['SS'],
+      {
+        **{
+          key: int( value['N'] )
+          for (key, value) in item['AutonomousSystem']['M'].items()
+          if 'N' in value.keys()
+        },
+        **{
+          key: value['S']
+          for (key, value) in item['AutonomousSystem']['M'].items()
+          if 'S' in value.keys()
+        }
       },
-      **{
-        key: value['S'] 
-        for (key, value) in item['AutonomousSystem']['M'].items()
-        if 'S' in value.keys() 
-      }
-    },
-    item['ISP']['S'], item['Proxy']['BOOL'], item['VPN']['BOOL'], 
-    item['TOR']['BOOL'],
-    datetime.datetime.strptime(
-      item['DateAdded']['S'], '%Y-%m-%dT%H:%M:%S.%fZ'
+      item['ISP']['S'], item['Proxy']['BOOL'], item['VPN']['BOOL'],
+      item['TOR']['BOOL'],
+      datetime.datetime.strptime(
+        item['DateAdded']['S'], '%Y-%m-%dT%H:%M:%S.%fZ'
+      )
     )
-  )
+  except Exception as e:
+    print( f'ERROR itemToLocation: {e}' )
+    raise toItemException( 'location' ) from e

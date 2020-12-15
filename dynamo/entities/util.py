@@ -15,6 +15,18 @@ def formatDate( date ):
     + date.strftime('%f')[:3] + 'Z' 
 
 def objectToItemAtr( obj ):
+  '''Formats any Python type to its respective DynamoDB syntax.
+
+  Parameters
+  ----------
+  obj : any
+    The object to be formatted into the DynamoDB syntax.
+
+  Returns
+  -------
+  result : dict
+    The DynamoDB syntax of the object.
+  '''
   if type( obj ) == str:
     if obj == 'None':
       return { 'NULL': True }
@@ -33,3 +45,17 @@ def objectToItemAtr( obj ):
     return { 'NULL': True }
   else:
     raise Exception( 'Could not parse attribute: ', obj )
+
+class toItemException( Exception ):
+  '''Exception raised for errors parsing a DynamoDB item to its respective
+  object.
+
+  Attributes
+  ----------
+  itemType = str
+    The type of item attempted to parse from.
+  '''
+  def __init__( self, itemType ):
+    self.itemType = itemType
+    self.message = f'Could not parse { self.itemType }'
+    super().__init__( self.message )

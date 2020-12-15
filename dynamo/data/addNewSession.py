@@ -1,11 +1,12 @@
-import os, sys
+import os
+import sys
+import numpy as np
+import boto3
+from botocore.exceptions import ClientError
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-import numpy as np
-from dynamo.entities import Session 
-import boto3
-from botocore.exceptions import ClientError
+from dynamo.entities import Session
 dynamo = boto3.client( 'dynamodb' )
 
 def addNewSession( visitor, browsers, visits ):
@@ -34,10 +35,10 @@ def addNewSession( visitor, browsers, visits ):
   result = addBrowsers( browsers )
   if 'error' in result.keys():
     return { 'error': result['error'] }
-  result = addSession( 
-    Session( 
-      visits[0].date, 
-      visits[0].ip, 
+  result = addSession(
+    Session(
+      visits[0].date,
+      visits[0].ip,
       np.mean( [
         visit.timeOnPage for visit in visits
         if type(visit.timeOnPage) == float
@@ -101,7 +102,7 @@ def addBrowsers( browsers ):
   '''
   try:
     dynamo.batch_write_item(
-      RequestItems = { os.environ.get( 'TABLE_NAME' ): [ 
+      RequestItems = { os.environ.get( 'TABLE_NAME' ): [
         { 'PutRequest': { 'Item': browser.toItem() } }
         for browser in browsers
       ] },
@@ -134,8 +135,8 @@ def addSession( session ):
   except ClientError as e:
     print( f'ERROR addSession: { e }')
     if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-      return { 
-        'error': f'Visitor\'s session is already in table { session }' 
+      return {
+        'error': f'Visitor\'s session is already in table { session }'
       }
     return { 'error': 'Could not add new session to table' }
 
@@ -154,7 +155,7 @@ def addVisits( visits ):
   '''
   try:
     result = dynamo.batch_write_item(
-      RequestItems = { os.environ.get( 'TABLE_NAME' ): [ 
+      RequestItems = { os.environ.get( 'TABLE_NAME' ): [
         { 'PutRequest': { 'Item': visit.toItem() } }
         for visit in visits
       ] },

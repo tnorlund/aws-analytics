@@ -1,10 +1,12 @@
-import os, sys
+import os
+import sys
+import boto3
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
 from dynamo.entities import itemToVisitor, itemToVisit, itemToSession, \
   itemToLocation, itemToBrowser
-import boto3
+
 dynamo = boto3.client( 'dynamodb' )
 
 def getVisitorDetails( visitor ):
@@ -14,7 +16,7 @@ def getVisitorDetails( visitor ):
   ----------
   visitor : Visitor
     The visitor to request from the table.
-  
+
   Returns
   -------
   result : dict
@@ -38,19 +40,19 @@ def getVisitorDetails( visitor ):
     }
     for item in result['Items']:
       if item['Type']['S'] == 'visitor':
-          data['visitor'] = itemToVisitor( item )
+        data['visitor'] = itemToVisitor( item )
       elif item['Type']['S'] == 'visit':
-          data['visits'].append( itemToVisit( item ) )
+        data['visits'].append( itemToVisit( item ) )
       elif item['Type']['S'] == 'session':
-          data['sessions'].append( itemToSession( item ) )
+        data['sessions'].append( itemToSession( item ) )
       elif item['Type']['S'] == 'location':
-          data['location'] = itemToLocation( item )
+        data['location'] = itemToLocation( item )
       elif item['Type']['S'] == 'browser':
-          data['browsers'].append( itemToBrowser( item ) )
+        data['browsers'].append( itemToBrowser( item ) )
       else:
-          raise Exception( 
-            f'''Could not parse type: { item }'''
-          )
+        raise Exception(
+          f'''Could not parse type: { item }'''
+        )
     return data
   except Exception as e:
     print( f'ERROR getVisitorDetails: {e}')

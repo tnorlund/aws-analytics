@@ -1,10 +1,12 @@
-import os, sys
+import os
+import sys
+import boto3
+from botocore.exceptions import ClientError
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
 from dynamo.entities import itemToVisit, itemToSession
-import boto3
-from botocore.exceptions import ClientError
+
 dynamo = boto3.client( 'dynamodb' )
 
 def getSession( session ):
