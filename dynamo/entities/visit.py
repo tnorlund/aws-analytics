@@ -8,7 +8,9 @@ class Visit:
     self, date, ip, user, title, slug, sessionStart, timeOnPage=None,
     prevTitle=None, prevSlug=None, nextTitle=None, nextSlug=None,
   ):
-    self.date = datetime.datetime.strptime( date, '%Y-%m-%dT%H:%M:%S.%fZ' )
+    self.date = datetime.datetime.strptime(
+      date, '%Y-%m-%dT%H:%M:%S.%fZ'
+    ) if type( date ) == str else date
     self.ip = ip
     if user == 'None' or user is None:
       self.user = 0

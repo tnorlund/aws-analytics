@@ -3,8 +3,6 @@ sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
 from dynamo.entities import itemToVisit, itemToSession
-import numpy as np
-from dynamo.entities import Session 
 import boto3
 from botocore.exceptions import ClientError
 dynamo = boto3.client( 'dynamodb' )
