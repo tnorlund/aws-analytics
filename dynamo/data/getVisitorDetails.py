@@ -36,9 +36,9 @@ def getVisitorDetails( visitor ):
           data['browsers'].append( itemToBrowser( item ) )
       else:
           raise Exception( 
-            f'''Could not parse type: { item['Type']['S'] }'''
+            f'''Could not parse type: { item }'''
           )
     return data
   except Exception as e:
-    print( f'ERROR getUserDetails: {e}')
+    print( f'ERROR getVisitorDetails: {e}')
     return { 'error': 'Could not get visitor from table' }

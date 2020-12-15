@@ -166,7 +166,7 @@ class Browser:
 def itemToBrowser( item ): 
   return Browser(
     item['App']['S'], item['PK']['S'].split('#')[1], item['Width']['N'],
-    item['Height']['S'], item['DateVisited']['S'], item['Device']['S'],
+    item['Height']['N'], item['DateVisited']['S'], item['Device']['S'],
     item['DeviceType']['S'], item['Browser']['S'], item['OS']['S'], 
     item['Webkit']['S'], item['Version']['S'], datetime.datetime.strptime(
       item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'

@@ -8,7 +8,7 @@ import boto3
 from botocore.exceptions import ClientError
 dynamo = boto3.client( 'dynamodb' )
 
-def addNewVisitor( visitor, location, browser, visits ):
+def addNewVisitor( visitor, location, browsers, visits ):
   '''Adds a new visitor and their details the the table.
 
   Parameters
@@ -17,8 +17,8 @@ def addNewVisitor( visitor, location, browser, visits ):
     The visitor to be added to the table.
   location : Location
     The visitor's location to be added to the table.
-  browser : Browser
-    The visitor's browser to be added to the table.
+  browsers : list[ Browser ]
+    The visitor's browsers to be added to the table.
   visits : list[ Visit ]
     The visits to be added to the table.
   
@@ -33,7 +33,7 @@ def addNewVisitor( visitor, location, browser, visits ):
   result = addLocation( location )
   if 'error' in result.keys():
     return { 'error': result['error'] }
-  result = addBrowser( browser )
+  result = addBrowsers( browsers )
   if 'error' in result.keys():
     return { 'error': result['error'] }
   result = addSession( 
@@ -53,7 +53,7 @@ def addNewVisitor( visitor, location, browser, visits ):
   if 'error' in result.keys():
     return { 'error': result['error'] }
   return {
-    'visitor': visitor, 'location': location, 'browser': browser,
+    'visitor': visitor, 'location': location, 'browsers': browsers,
     'visits': visits
   }
   
@@ -112,12 +112,12 @@ def addSession( session ):
     return { 'error': 'Could not add new session to table' }
 
 
-def addBrowser( browser ):
+def addBrowsers( browsers ):
   '''Adds the visitor's browser to the table.
 
   Parameters
   ----------
-  browser : Browser
+  browsers : list[ Browser ]
     The visitor's browser to be added to the table.
 
   Returns
@@ -126,19 +126,16 @@ def addBrowser( browser ):
     The result of adding the browser to the table.
   '''
   try:
-    dynamo.put_item(
-      TableName = os.environ.get( 'TABLE_NAME' ),
-      Item = browser.toItem(),
-      ConditionExpression = 'attribute_not_exists(PK)'
+    dynamo.batch_write_item(
+      RequestItems = { os.environ.get( 'TABLE_NAME' ): [ 
+        { 'PutRequest': { 'Item': browser.toItem() } }
+        for browser in browsers
+      ] },
     )
-    return { 'browser': browser }
+    return { 'browsers': browsers }
   except ClientError as e:
     print( f'ERROR addBrowser: { e }')
-    if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-      return { 
-        'error': f'Visitor\'s browser is already in table { browser }' 
-      }
-    return { 'error': 'Could not add new location to table' }
+    return { 'error': 'Could not add new browsers to table' }
 
 def addLocation( location ):
   '''Adds the visitor's location to the table.
