@@ -8,6 +8,19 @@ import boto3
 dynamo = boto3.client( 'dynamodb' )
 
 def getVisitorDetails( visitor ):
+  '''Gets the visitor and their details from the table.
+
+  Parameters
+  ----------
+  visitor : Visitor
+    The visitor to request from the table.
+  
+  Returns
+  -------
+  result : dict
+    The result of requesting the visitor from the table. This contains either
+    the error that occurred or the visitor's details.
+  '''
   try:
     result = dynamo.query(
       TableName = os.environ.get( 'TABLE_NAME' ),

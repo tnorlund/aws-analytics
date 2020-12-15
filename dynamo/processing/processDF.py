@@ -2,6 +2,20 @@ import numpy as np
 import pandas as pd
 
 def processDF( df, ip ):
+  '''Cleans the given dataframe to only have the data of the given IP address.
+
+  Parameters
+  ----------
+  df : pd.DataFrame
+    The raw dataframe from the original '.parquet' file.
+  ip : str
+    The IP address of the requested visitor.
+  
+  Returns
+  -------
+  v_df : pd.DataFrame
+    The visitor's DataFrame that only contains the attributes specific to them.
+  '''
   v_df = df[df['ip'] == ip].drop_duplicates().sort_values( by='id' ) \
     .reset_index()
   # Format the datetimes to be dates and then calculate the amount of time

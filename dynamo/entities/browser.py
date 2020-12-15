@@ -166,9 +166,14 @@ class Browser:
 def itemToBrowser( item ): 
   return Browser(
     item['App']['S'], item['PK']['S'].split('#')[1], item['Width']['N'],
-    item['Height']['N'], item['DateVisited']['S'], item['Device']['S'],
-    item['DeviceType']['S'], item['Browser']['S'], item['OS']['S'], 
-    item['Webkit']['S'], item['Version']['S'], datetime.datetime.strptime(
+    item['Height']['N'], item['DateVisited']['S'], 
+    None if 'NULL' in item['Device'].keys() else item['Device']['S'],
+    None if 'NULL' in item['DeviceType'].keys() else item['DeviceType']['S'], 
+    None if 'NULL' in item['Browser'].keys() else item['Browser']['S'], 
+    None if 'NULL' in item['OS'].keys() else item['OS']['S'], 
+    None if 'NULL' in item['Webkit'].keys() else item['Webkit']['S'], 
+    None if 'NULL' in item['Version'].keys() else item['Version']['S'], 
+    datetime.datetime.strptime(
       item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
     )
   )
