@@ -1,6 +1,7 @@
 import os
 import sys
 import boto3
+from botocore.exceptions import ClientError
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
@@ -56,4 +57,7 @@ def getVisitorDetails( visitor ):
     return data
   except KeyError as e:
     print( f'ERROR getVisitorDetails: {e}')
+    return { 'error': 'Could not get visitor from table' }
+  except ClientError as e:
+    print( f'ERROR getVisitorDetails: { e }')
     return { 'error': 'Could not get visitor from table' }

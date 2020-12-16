@@ -43,8 +43,8 @@ def processVisits( visits ):
   v_df = v_df.replace( { np.nan: None } )
   return [
     Visit(
-      row['id'], row['ip'], row['user'], row['title'], row['slug'], 
-      v_df.iloc[0]['id'], row['seconds'], row['prevTitle'], 
+      row['id'], row['ip'], row['user'], row['title'], row['slug'],
+      v_df.iloc[0]['id'], row['seconds'], row['prevTitle'],
       row['prevSlug'], row['nextTitle'], row['nextSlug']
     ) for index, row in v_df.iterrows()
   ]

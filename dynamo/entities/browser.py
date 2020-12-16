@@ -2,6 +2,10 @@ import re
 import datetime
 from .util import objectToItemAtr, formatDate
 
+# TODO
+# [ ] Refactor browser initialization to use multiple functions
+# [ ] Add docstrings
+
 class Browser:
   def __init__(
     self, app, ip, width, height, dateVisited, device = None,
