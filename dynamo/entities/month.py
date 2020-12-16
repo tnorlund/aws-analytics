@@ -1,8 +1,8 @@
 import re
 from .util import objectToItemAtr, toItemException
 
-class Day:
-  '''A class to represent a day item for DynamoDB.
+class Month:
+  '''A class to represent a month item for DynamoDB.
 
   Attributes
   ----------
@@ -14,10 +14,8 @@ class Day:
     The year the page was visited.
   month : int
     The month, represented as a number, the page was visited.
-  day : int
-    The day of the month the page was visited.
   numberVisitors : int
-    The number of page's unique visitors.
+    The number of the page's unique visitors.
   averageTime : float
     The average number of time spent on the page until going to another page
     on the website.
@@ -32,19 +30,19 @@ class Day:
   Methods
   -------
   key():
-    Returns the Primary Key of the day.
+    Returns the Primary Key of the month.
   gsi1():
-    Returns the Primary Key of the first Global Secondary Index of the day.
+    Returns the Primary Key of the first Global Secondary Index of the month.
   gsi1pk():
-    Returns the Partition Key of the first Global Secondary Index of the day.
+    Returns the Partition Key of the first Global Secondary Index of the month.
   toItem():
-    Returns the day as a parsed DynamoDB item.
+    Returns the month as a parsed DynamoDB item.
   '''
   def __init__(
     self, slug, title, date, numberVisitors, averageTime,
     percentChurn, fromPage, toPage
   ):
-    '''Constructs the necessary attributes for the day object.
+    '''Constructs the necessary attributes for the month object.
 
     Parameters
     ----------
@@ -53,7 +51,7 @@ class Day:
     title : str
       The title of the page visited.
     date : str
-      The day's date in the format "<year>-<month>-<day>".
+      The week's date in the format "<year>-<month>".
     numberVisitors : int
       The number of page's unique visitors.
     averageTime : float
@@ -67,20 +65,17 @@ class Day:
     toPage : dict
       The different pages the visitors when to and their ratios.
     '''
-    dateMatch = re.match( r'(\d+)-(\d+)-(\d+)', date )
+    dateMatch = re.match( r'(\d+)-(\d+)', date )
     if not dateMatch:
       raise ValueError( 'Must give month as "<year>-<month>-<day>"' )
     if len( dateMatch.group( 1 ) ) != 4:
       raise ValueError( 'Must give valid year' )
     if int( dateMatch.group( 2 ) ) < 1 or int( dateMatch.group(2) ) > 12:
       raise ValueError( 'Must give valid month' )
-    if int( dateMatch.group( 3 ) ) < 1 or int( dateMatch.group(3) ) > 31:
-      raise ValueError( 'Must give valid day of the month' )
     self.slug = slug
     self.title = title
     self.year = int( dateMatch.group( 1 ) )
     self.month = int( dateMatch.group( 2 ) )
-    self.day = int( dateMatch.group( 3 ) )
     self.numberVisitors = numberVisitors
     self.averageTime = averageTime
     self.percentChurn = percentChurn
@@ -88,25 +83,25 @@ class Day:
     self.toPage = toPage
 
   def key( self ):
-    '''Returns the Primary Key of the day.
+    '''Returns the Primary Key of the week.
 
-    This is used to retrieve the unique day from the table.
+    This is used to retrieve the unique month from the table.
     '''
     return {
       'PK': { 'S': f'PAGE#{ self.slug }' },
-      'SK': { 'S': f'#DAY#{ self.year }-{ self.month:02 }-{ self.day:02 }' }
+      'SK': { 'S': f'#MONTH#{ self.year }-{ self.month:02 }' }
     }
 
   def gsi1( self ):
     '''Returns the Primary Key of the first Global Secondary Index of the
     day.
 
-    This is used to retrieve the unique day from the table.
+    This is used to retrieve the unique month from the table.
     '''
     return {
       'GSI1PK': { 'S': f'PAGE#{ self.slug }' },
       'GSI1SK': {
-        'S': f'#DAY#{ self.year }-{ self.month:02 }-{ self.day:02 }'
+        'S': f'#MONTH#{ self.year }-{ self.month:02 }'
       }
     }
 
@@ -119,17 +114,17 @@ class Day:
     return { 'S': f'PAGE#{ self.slug }' }
 
   def toItem( self ):
-    '''Returns the day as a parsed DynamoDB item.
+    '''Returns the month as a parsed DynamoDB item.
 
     Returns
     -------
     item : dict
-      The day in DynamoDB syntax.
+      The month in DynamoDB syntax.
     '''
     return {
       **self.key(),
       **self.gsi1(),
-      'Type': { 'S': 'day' },
+      'Type': { 'S': 'month' },
       'Title': { 'S': self.title },
       'Slug': { 'S': self.slug },
       'NumberVisitors': objectToItemAtr( self.numberVisitors ),
@@ -140,10 +135,10 @@ class Day:
     }
 
   def __repr__( self ):
-    return f'{ self.title }-{ self.year }/{ self.month:02 }/{ self.day:02 }'
+    return f'{ self.title }-{ self.year }/{ self.month:02 }'
 
-def itemToDay( item ):
-  '''Parses a DynamoDB item as a day object.
+def itemToMonth( item ):
+  '''Parses a DynamoDB item as a month object.
 
   Parameters
   ----------
@@ -153,15 +148,15 @@ def itemToDay( item ):
   Raises
   ------
   toItemException
-    When the item is missing the required keys to parse into a day object.
+    When the item is missing the required keys to parse into a month object.
 
   Returns
   -------
-  day : Day
-    The day object parsed from the raw DynamoDB item.
+  month : Month
+    The month object parsed from the raw DynamoDB item.
   '''
   try:
-    return Day(
+    return Month(
       item['Slug']['S'], item['Title']['S'], item['SK']['S'].split('#')[2],
       item['NumberVisitors']['N'], item['AverageTime']['N'],
       item['PercentChurn']['N'],
@@ -177,5 +172,5 @@ def itemToDay( item ):
       }
     )
   except Exception as e:
-    print( f'ERROR itemToDay: {e}' )
-    raise toItemException( 'day' ) from e
+    print( f'ERROR itemToMonth: {e}' )
+    raise toItemException( 'month' ) from e
