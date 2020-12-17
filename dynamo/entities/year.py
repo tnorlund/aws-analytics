@@ -81,7 +81,7 @@ class Year:
     return {
       **self.key(),
       **self.gsi1(),
-      'Type': { 'S': 'day' },
+      'Type': { 'S': 'year' },
       'Title': { 'S': self.title },
       'Slug': { 'S': self.slug },
       'NumberVisitors': objectToItemAtr( self.numberVisitors ),

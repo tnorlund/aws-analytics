@@ -16,7 +16,7 @@ def addNewPage( visits ):
   ----------
   visits : list[ Visit ]
     The specific page's visits that are processed to the page, days, weeks,
-    months, and years.
+    months, and years items.
 
   Returns
   -------

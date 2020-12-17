@@ -69,7 +69,7 @@ class Day:
     '''
     dateMatch = re.match( r'(\d+)-(\d+)-(\d+)', date )
     if not dateMatch:
-      raise ValueError( 'Must give month as "<year>-<month>-<day>"' )
+      raise ValueError( 'Must give day as "<year>-<month>-<day>"' )
     if len( dateMatch.group( 1 ) ) != 4:
       raise ValueError( 'Must give valid year' )
     if int( dateMatch.group( 2 ) ) < 1 or int( dateMatch.group(2) ) > 12:
@@ -94,7 +94,13 @@ class Day:
     '''
     return {
       'PK': { 'S': f'PAGE#{ self.slug }' },
-      'SK': { 'S': f'#DAY#{ self.year }-{ self.month:02 }-{ self.day:02 }' }
+      'SK': {
+        'S': f'''#DAY#{
+            self.year
+          }-{
+            str( self.month ).zfill( 2 )
+          }-{ str( self.day ).zfill( 2 ) }'''
+      }
     }
 
   def gsi1( self ):
@@ -106,7 +112,11 @@ class Day:
     return {
       'GSI1PK': { 'S': f'PAGE#{ self.slug }' },
       'GSI1SK': {
-        'S': f'#DAY#{ self.year }-{ self.month:02 }-{ self.day:02 }'
+        'S': f'''#DAY#{
+          self.year
+        }-{
+          str( self.month ).zfill( 2 )
+        }-{ str( self.day ).zfill( 2 ) }'''
       }
     }
 
@@ -140,7 +150,15 @@ class Day:
     }
 
   def __repr__( self ):
-    return f'{ self.title }-{ self.year }/{ self.month:02 }/{ self.day:02 }'
+    return f'''{
+      self.title
+    }-{
+      self.year
+    }/{
+      str( self.month ).zfill( 2 )
+    }/{
+      str( self.day ).zfill( 2 )
+    }'''
 
 def itemToDay( item ):
   '''Parses a DynamoDB item as a day object.

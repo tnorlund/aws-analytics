@@ -89,7 +89,7 @@ class Month:
     '''
     return {
       'PK': { 'S': f'PAGE#{ self.slug }' },
-      'SK': { 'S': f'#MONTH#{ self.year }-{ self.month:02 }' }
+      'SK': { 'S': f'#MONTH#{ self.year }-{ str( self.month ).zfill( 2 ) }' }
     }
 
   def gsi1( self ):
@@ -101,7 +101,7 @@ class Month:
     return {
       'GSI1PK': { 'S': f'PAGE#{ self.slug }' },
       'GSI1SK': {
-        'S': f'#MONTH#{ self.year }-{ self.month:02 }'
+        'S': f'#MONTH#{ self.year }-{ str( self.month ).zfill( 2 ) }'
       }
     }
 
@@ -135,7 +135,7 @@ class Month:
     }
 
   def __repr__( self ):
-    return f'{ self.title }-{ self.year }/{ self.month:02 }'
+    return f'{ self.title }-{ self.year }/{ str( self.month ).zfill( 2 ) }'
 
 def itemToMonth( item ):
   '''Parses a DynamoDB item as a month object.

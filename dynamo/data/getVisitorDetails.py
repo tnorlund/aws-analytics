@@ -34,11 +34,7 @@ def getVisitorDetails( visitor ):
     )
     if len( result['Items'] ) == 0:
       return { 'error': 'Visitor not in table' }
-    data = {
-      'visits': [],
-      'browsers': [],
-      'sessions': []
-    }
+    data = { 'visits': [], 'browsers': [], 'sessions': [] }
     for item in result['Items']:
       if item['Type']['S'] == 'visitor':
         data['visitor'] = itemToVisitor( item )

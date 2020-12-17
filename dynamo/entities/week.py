@@ -53,7 +53,7 @@ class Week:
     '''
     return {
       'PK': { 'S': f'PAGE#{ self.slug }' },
-      'SK': { 'S': f'#WEEK#{ self.year }-{ self.week:02 }' }
+      'SK': { 'S': f'#WEEK#{ self.year }-{ str( self.week ).zfill( 2 ) }' }
     }
 
   def gsi1( self ):
@@ -65,7 +65,7 @@ class Week:
     return {
       'GSI1PK': { 'S': f'PAGE#{ self.slug }' },
       'GSI1SK': {
-        'S': f'#WEEK#{ self.year }-{ self.week:02 }'
+        'S': f'#WEEK#{ self.year }-{ str( self.week ).zfill( 2 ) }'
       }
     }
 
@@ -88,7 +88,7 @@ class Week:
     return {
       **self.key(),
       **self.gsi1(),
-      'Type': { 'S': 'day' },
+      'Type': { 'S': 'week' },
       'Title': { 'S': self.title },
       'Slug': { 'S': self.slug },
       'NumberVisitors': objectToItemAtr( self.numberVisitors ),
@@ -99,7 +99,7 @@ class Week:
     }
 
   def __repr__( self ):
-    return f'{ self.title }-{ self.year }/{ self.week:02 }'
+    return f'{ self.title }-{ self.year }/{ str( self.week ).zfill( 2 ) }'
 
 def itemToWeek( item ):
   '''Parses a DynamoDB item as a week object.

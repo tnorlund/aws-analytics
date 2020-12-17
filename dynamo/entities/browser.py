@@ -7,130 +7,30 @@ from .util import objectToItemAtr, formatDate
 # [ ] Add docstrings
 
 class Browser:
+  '''A class to represent a browser item for DynamoDB.
+  '''
   def __init__(
     self, app, ip, width, height, dateVisited, device = None,
     deviceType = None, browser = None, os = None,  webkit = None,
     version = None, dateAdded = datetime.datetime.now()
   ):
+    self.app = app
+    self.ip = ip
     self.width = width
     self.height = height
     self.dateVisited = datetime.datetime.strptime(
       dateVisited, '%Y-%m-%dT%H:%M:%S.%fZ'
     )
-    # Mac - Safari
-    if re.match(
-      r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
-      r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
-      r"(\d+\.\d+\.\d+) Safari\/(\d+\.\d+\.\d+)",
-      app
-    ):
-      match = re.match(
-        r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) "  + \
-        r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
-        r"(\d+\.\d+\.\d+) Safari\/(\d+\.\d+\.\d+)",
-        app
-      )
-      self.app = app
-      self.device = 'mac'
-      self.type = 'desktop'
-      self.browser = 'safari'
-      self.os = match.group(1).replace( '_', '.' )
-      self.webkit = match.group(2)
-      self.version = match.group(3)
-      self.ip = ip
-      self.dateAdded = dateAdded
-    # Mac - Chrome
-    elif re.match(
-      r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
-      r"AppleWebKit\/(\d+\.\d+) \(KHTML, like Gecko\) Chrome\/" + \
-      r"(\d+\.\d+\.\d+\.\d+) Safari\/(\d+\.\d+)",
-      app
-    ):
-      match = re.match(
-        r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
-        r"AppleWebKit\/(\d+\.\d+) \(KHTML, like Gecko\) Chrome\/" + \
-        r"(\d+\.\d+\.\d+\.\d+) Safari\/(\d+\.\d+)",
-        app
-      )
-      self.app = app
-      self.device = 'mac'
-      self.type = 'desktop'
-      self.browser = 'chrome'
-      self.os = match.group(1).replace( '_', '.' )
-      self.webkit = match.group(2)
-      self.version = match.group(3)
-      self.ip = ip
-      self.dateAdded = dateAdded
-    # Windows - Chrome
-    elif re.match(
-      r"Mozilla\/5\.0 \(Windows NT (\d+\.\d+); Win64; x64\) AppleWebKit" + \
-      r"\/(\d+\.\d+) \(KHTML, like Gecko\) Chrome\/(\d+\.\d+\.\d+\.\d+) " + \
-      r"Safari\/(\d+\.\d+)",
-      app
-    ):
-      match = re.match(
-        r"Mozilla\/5\.0 \(Windows NT (\d+\.\d+); Win64; x64\) AppleWebKit" + \
-        r"\/(\d+\.\d+) \(KHTML, like Gecko\) Chrome\/(\d+\.\d+\.\d+\.\d+) " + \
-        r"Safari\/(\d+\.\d+)",
-        app
-      )
-      self.app = app
-      self.device = 'windows'
-      self.type = 'desktop'
-      self.browser = 'chrome'
-      self.os = match.group(1)
-      self.webkit = match.group(2)
-      self.version = match.group(3)
-      self.ip = ip
-      self.dateAdded = dateAdded
-    # iPhone - Safari
-    elif re.match(
-      r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
-      r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
-      r"(\d+\.\d+\.\d+|\d+\.\d) Mobile\/15E148 Safari\/(\d+\.\d+)",
-      app
-    ):
-      match = re.match(
-        r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
-        r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
-        r"(\d+\.\d+\.\d+|\d+\.\d) Mobile\/15E148 Safari\/(\d+\.\d+)",
-        app
-      )
-      self.app = app
-      self.device = 'iphone'
-      self.type = 'mobile'
-      self.browser = 'safari'
-      self.os = match.group(1).replace( '_', '.' )
-      self.webkit = match.group(2)
-      self.version = match.group(3)
-      self.ip = ip
-      self.dateAdded = dateAdded
-    # iPhone - App
-    elif re.match(
-      r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
-      r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Mobile\/15E148 " + \
-      r"(\[[a-zA-Z0-9]+\])",
-      app
-    ):
-      match = re.match(
-        r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
-        r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Mobile\/" + \
-        r"15E148 (\[[a-zA-Z0-9]+\])",
-        app
-      )
-      self.app = app
-      self.device = 'iphone'
-      self.type = 'mobile'
-      self.browser = match.group(3)
-      self.os = match.group(1).replace( '_', '.' )
-      self.webkit = match.group(2)
-      self.version = None
-      self.ip = ip
-      self.dateAdded = dateAdded
-    else:
+    self.dateAdded = dateAdded
+    result = self._matchMac( app )
+    if not result:
+      result = self._matchWindows( app )
+    elif not result:
+      result = self._matchiPhone( app )
+    elif not result:
       self.app = app
       self.device = device
-      self.type = deviceType
+      self.deviceType = deviceType
       self.browser = browser
       self.os = os
       self.webkit = webkit
@@ -156,7 +56,7 @@ class Browser:
       'Height': objectToItemAtr( self.height ),
       'DateVisited': {'S': formatDate( self.dateVisited ) },
       'Device': objectToItemAtr( self.device ),
-      'DeviceType': objectToItemAtr( self.type ),
+      'DeviceType': objectToItemAtr( self.deviceType ),
       'Browser': objectToItemAtr( self.browser ),
       'OS': objectToItemAtr( self.os ),
       'Webkit': objectToItemAtr( self.webkit ),
@@ -166,6 +66,90 @@ class Browser:
 
   def __repr__( self ):
     return f"{ self.ip } - { self.browser }"
+
+  def _matchMac( self, app ):
+    # Mac - Safari
+    safari_match = re.match(
+      r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) "  + \
+      r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
+      r"(\d+\.\d+\.\d+) Safari\/(\d+\.\d+\.\d+)",
+      app
+    )
+    # Mac - Chrome
+    chrome_match = re.match(
+      r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
+      r"AppleWebKit\/(\d+\.\d+) \(KHTML, like Gecko\) Chrome\/" + \
+      r"(\d+\.\d+\.\d+\.\d+) Safari\/(\d+\.\d+)",
+      app
+    )
+    if safari_match:
+      self.device = 'mac'
+      self.deviceType = 'desktop'
+      self.browser = 'safari'
+      self.os = safari_match.group( 1 ).replace( '_', '.' )
+      self.webkit = safari_match.group( 2 )
+      self.version =  safari_match.group( 3 )
+      return True
+    if chrome_match:
+      self.device = 'mac'
+      self.deviceType = 'desktop'
+      self.browser = 'chrome'
+      self.os = safari_match.group( 1 ).replace( '_', '.' )
+      self.webkit = safari_match.group( 2 )
+      self.version =  safari_match.group( 3 )
+      return True
+    return False
+
+  def _matchWindows( self, app ):
+    # Windows - Chrome
+    match = re.match(
+      r"Mozilla\/5\.0 \(Windows NT (\d+\.\d+); Win64; x64\) AppleWebKit" + \
+      r"\/(\d+\.\d+) \(KHTML, like Gecko\) Chrome\/(\d+\.\d+\.\d+\.\d+) " + \
+      r"Safari\/(\d+\.\d+)",
+      app
+    )
+    if match:
+      self.device = 'windows'
+      self.deviceType = 'desktop'
+      self.browser = 'chrome'
+      self.os = match.group( 1 ).replace( '_', '.' )
+      self.webkit = match.group( 2 )
+      self.version = match.group( 3 )
+      return True
+    return False
+
+  def _matchiPhone( self, app ):
+    # iPhone - Safari
+    iphone_match = re.match(
+      r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
+      r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
+      r"(\d+\.\d+\.\d+|\d+\.\d) Mobile\/15E148 Safari\/(\d+\.\d+)",
+      app
+    )
+    # iPhone - App
+    app_match = re.match(
+      r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
+      r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Mobile\/15E148 " + \
+      r"(\[[a-zA-Z0-9]+\])",
+      app
+    )
+    if iphone_match:
+      self.device = 'iphone'
+      self.deviceType = 'mobile'
+      self.browser = 'safari'
+      self.os = iphone_match.group(1).replace( '_', '.' )
+      self.webkit = iphone_match.group(2)
+      self.version = iphone_match.group(3)
+      return True
+    if app_match:
+      self.device = 'iphone'
+      self.deviceType = 'mobile'
+      self.browser = app_match.group(3)
+      self.os = app_match.group(1).replace( '_', '.' )
+      self.webkit = app_match.group(2)
+      self.version = None
+      return True
+    return False
 
 def itemToBrowser( item ):
   return Browser(
