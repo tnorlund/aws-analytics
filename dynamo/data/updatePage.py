@@ -9,7 +9,7 @@ sys.path.append(
 from dynamo.entities import Page, Day, Week, Month, Year # pylint: disable=wrong-import-position
 dynamo = boto3.client( 'dynamodb' )
 
-def addNewPage( visits ):
+def updatePage( visits ):
   '''Adds the page, and its days/weeks/months/years to the table.
 
   Parameters
@@ -118,17 +118,12 @@ def addYear( visits ):
     # Add the year to the table
     dynamo.put_item(
       TableName = os.environ.get( 'TABLE_NAME' ),
-      Item = year.toItem(),
-      ConditionExpression = 'attribute_not_exists(PK)'
+      Item = year.toItem()
     )
     # Return the year added to the table
     return { 'year': year }
   except ClientError as e:
-    print( f'ERROR addYear: { e }')
-    if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-      return {
-        'error': f'Year is already in table { year }'
-      }
+    print( f'ERROR addYear: { e }' )
     return { 'error': 'Could not add new year to table' }
 
 def addMonth( visits ):
@@ -176,17 +171,12 @@ def addMonth( visits ):
     # Add the month to the table
     dynamo.put_item(
       TableName = os.environ.get( 'TABLE_NAME' ),
-      Item = month.toItem(),
-      ConditionExpression = 'attribute_not_exists(PK)'
+      Item = month.toItem()
     )
     # Return the month added to the table
     return { 'month': month }
   except ClientError as e:
-    print( f'ERROR addMonth: { e }')
-    if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-      return {
-        'error': f'Month is already in table { month }'
-      }
+    print( f'ERROR addMonth: { e }' )
     return { 'error': 'Could not add new month to table' }
 
 def addWeek( visits ):
@@ -234,17 +224,12 @@ def addWeek( visits ):
     # Add the week to the table
     dynamo.put_item(
       TableName = os.environ.get( 'TABLE_NAME' ),
-      Item = week.toItem(),
-      ConditionExpression = 'attribute_not_exists(PK)'
+      Item = week.toItem()
     )
     # Return the week added to the table
     return { 'week': week }
   except ClientError as e:
-    print( f'ERROR addWeek: { e }')
-    if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-      return {
-        'error': f'Week is already in table { week }'
-      }
+    print( f'ERROR addWeek: { e }' )
     return { 'error': 'Could not add new week to table' }
 
 def addDay( visits ):
@@ -292,17 +277,12 @@ def addDay( visits ):
     # Add the day to the table
     dynamo.put_item(
       TableName = os.environ.get( 'TABLE_NAME' ),
-      Item = day.toItem(),
-      ConditionExpression = 'attribute_not_exists(PK)'
+      Item = day.toItem()
     )
     # Return the day added to the table
     return { 'day': day }
   except ClientError as e:
     print( f'ERROR addDay: { e }')
-    if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-      return {
-        'error': f'Day is already in table { day }'
-      }
     return { 'error': 'Could not add new day to table' }
 
 def addPage( visits ):
@@ -349,15 +329,10 @@ def addPage( visits ):
     # Add the page to the table
     dynamo.put_item(
       TableName = os.environ.get( 'TABLE_NAME' ),
-      Item = page.toItem(),
-      ConditionExpression = 'attribute_not_exists(PK)'
+      Item = page.toItem()
     )
     # Return the page added to the table
     return { 'page': page }
   except ClientError as e:
     print( f'ERROR addPage: { e }')
-    if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-      return {
-        'error': f'Page is already in table { page }'
-      }
     return { 'error': 'Could not add new page to table' }

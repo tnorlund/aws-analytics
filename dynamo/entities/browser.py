@@ -70,7 +70,7 @@ class Browser:
   def _matchMac( self, app ):
     # Mac - Safari
     safari_match = re.match(
-      r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) "  + \
+      r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
       r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
       r"(\d+\.\d+\.\d+) Safari\/(\d+\.\d+\.\d+)",
       app
@@ -94,9 +94,9 @@ class Browser:
       self.device = 'mac'
       self.deviceType = 'desktop'
       self.browser = 'chrome'
-      self.os = safari_match.group( 1 ).replace( '_', '.' )
-      self.webkit = safari_match.group( 2 )
-      self.version =  safari_match.group( 3 )
+      self.os = chrome_match.group( 1 ).replace( '_', '.' )
+      self.webkit = chrome_match.group( 2 )
+      self.version =  chrome_match.group( 3 )
       return True
     return False
 
