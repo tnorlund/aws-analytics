@@ -102,7 +102,7 @@ class Day:
           }-{ str( self.day ).zfill( 2 ) }'''
       }
     }
-  
+
   def pk( self ):
     '''Returns the Partition Key of the day.
 

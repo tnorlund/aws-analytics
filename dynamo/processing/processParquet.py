@@ -24,7 +24,7 @@ s3 = boto3.client(
   region_name = os.environ.get( 'REGION_NAME' )
 )
 dynamo = boto3.client(
-  'dynamodb', 
+  'dynamodb',
   region_name = os.environ.get( 'REGION_NAME' )
 )
 

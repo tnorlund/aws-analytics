@@ -9,7 +9,7 @@ sys.path.append(
 from dynamo.entities import Session # pylint: disable=wrong-import-position
 
 dynamo = boto3.client(
-  'dynamodb', 
+  'dynamodb',
   region_name = os.environ.get( 'REGION_NAME' )
 )
 

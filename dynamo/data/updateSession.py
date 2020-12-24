@@ -3,7 +3,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 dynamo = boto3.client(
-  'dynamodb', 
+  'dynamodb',
   region_name = os.environ.get( 'REGION_NAME' )
 )
 

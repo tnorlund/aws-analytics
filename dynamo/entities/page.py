@@ -75,7 +75,7 @@ class Page:
       'PK': { 'S': f'PAGE#{ self.slug }' },
       'SK': { 'S': '#PAGE' }
     }
-  
+
   def pk( self ):
     '''Returns the Partition Key of the page.
 

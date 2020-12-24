@@ -93,7 +93,7 @@ class Month:
       'PK': { 'S': f'PAGE#{ self.slug }' },
       'SK': { 'S': f'#MONTH#{ self.year }-{ str( self.month ).zfill( 2 ) }' }
     }
-  
+
   def pk( self ):
     '''Returns the Partition Key of the month.
 

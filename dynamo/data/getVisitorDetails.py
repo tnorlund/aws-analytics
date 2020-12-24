@@ -9,7 +9,7 @@ from dynamo.entities import itemToVisitor, itemToVisit, itemToSession # pylint: 
 from dynamo.entities import itemToLocation, itemToBrowser # pylint: disable=wrong-import-position
 
 dynamo = boto3.client(
-  'dynamodb', 
+  'dynamodb',
   region_name = os.environ.get( 'REGION_NAME' )
 )
 
