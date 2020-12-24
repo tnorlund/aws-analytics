@@ -20,21 +20,18 @@ def processRecords( records ):
     The captured records parsed as their unique classes.
   '''
   data = {
-    'visits': [],
-    'browsers': [],
-    'sessions': []
+    'visits': [], 'browsers': [], 'sessions': [], 'locations': [],
+    'visitors': []
   }
   for item in records:
     if item['Type']['S'] == 'visitor':
-      data['visitor'] = itemToVisitor( item )
+      data['visitors'].append( itemToVisitor( item ) )
     elif item['Type']['S'] == 'visit':
       data['visits'].append( itemToVisit( item ) )
     elif item['Type']['S'] == 'session':
       data['sessions'].append( itemToSession( item ) )
     elif item['Type']['S'] == 'location':
-      data['location'] = itemToLocation( item )
+      data['locations'].append( itemToLocation( item ) )
     elif item['Type']['S'] == 'browser':
       data['browsers'].append( itemToBrowser( item ) )
-    else:
-      raise Exception( f'Could not parse type: { item }' )
   return data

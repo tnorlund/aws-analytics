@@ -1,19 +1,84 @@
 import re
 import datetime
-from .util import objectToItemAtr, formatDate
-
-# TODO
-# [ ] Refactor browser initialization to use multiple functions
-# [ ] Add docstrings
+from .util import objectToItemAtr, formatDate, toItemException
 
 class Browser:
   '''A class to represent a browser item for DynamoDB.
+
+  Attributes
+  ----------
+  app : str
+    The browser's userAgent.
+  ip :
+    The IP address of the visitor.
+  width : int
+    The width of the browser window in points.
+  height : int
+    The height of the browser window in points.
+  dateVisited : datetime.datetime | str
+    The datetime the browser was used to visit the website.
+  device : str
+    The device used to access the browser. This is typically the name of the
+    phone or computer used.
+  deviceType : str
+    The type of device used to access the browser. This is either a desktop
+    or mobile phone.
+  browser : str
+    The name of the browser used to access the website.
+  os : str
+    The name of the operating system used to the access the website.
+  webkit : str
+    The webkit version used in the browser.
+  version : str
+    The version number of the browser.
+  dateAdded : datetime.datetime | str
+    The datetime the browser was added to the table.
+
+  Methods
+  -------
+  key():
+    Returns the Primary Key of the browser.
+  pk():
+    Returns the Partition Key of the browser.
+  toItem():
+    Returns the browser as a parsed DynamoDB item.
   '''
   def __init__(
     self, app, ip, width, height, dateVisited, device = None,
     deviceType = None, browser = None, os = None,  webkit = None,
     version = None, dateAdded = datetime.datetime.now()
   ):
+    '''Constructs the necessary attributes for the browser object.
+
+    Parameters
+    ----------
+    app : str
+      The browser's userAgent.
+    ip :
+      The IP address of the visitor.
+    width : int
+      The width of the browser window in points.
+    height : int
+      The height of the browser window in points.
+    dateVisited : datetime.datetime | str
+      The datetime the browser was used to visit the website.
+    device : str
+      The device used to access the browser. This is typically the name of the
+      phone or computer used.
+    deviceType : str
+      The type of device used to access the browser. This is either a desktop
+      or mobile phone.
+    browser : str
+      The name of the browser used to access the website.
+    os : str
+      The name of the operating system used to the access the website.
+    webkit : str
+      The webkit version used in the browser.
+    version : str
+      The version number of the browser.
+    dateAdded : datetime.datetime | str
+      The datetime the browser was added to the table.
+    '''
     self.app = app
     self.ip = ip
     self.width = width
@@ -39,15 +104,30 @@ class Browser:
       self.dateAdded = dateAdded
 
   def key( self ):
+    '''Returns the Primary Key of the browser.
+
+    This is used to retrieve the unique browser from the table.
+    '''
     return( {
       'PK': { 'S': f'VISITOR#{ self.ip }' },
       'SK': { 'S': f'VISIT#{ formatDate( self.dateVisited ) }' }
     } )
 
   def pk( self ):
+    '''Returns the Partition Key of the browser.
+
+    This is used to retrieve the visitor-specific data from the table.
+    '''
     return { 'S': f'VISITOR#{ self.ip }' }
 
   def toItem( self ):
+    '''Returns the browser as a parsed DynamoDB item.
+
+    Returns
+    -------
+    item : dict
+      The browser in DynamoDB syntax.
+    '''
     return( {
       **self.key(),
       'Type': { 'S': 'browser' },
@@ -152,16 +232,37 @@ class Browser:
     return False
 
 def itemToBrowser( item ):
-  return Browser(
-    item['App']['S'], item['PK']['S'].split('#')[1], item['Width']['N'],
-    item['Height']['N'], item['DateVisited']['S'],
-    None if 'NULL' in item['Device'].keys() else item['Device']['S'],
-    None if 'NULL' in item['DeviceType'].keys() else item['DeviceType']['S'],
-    None if 'NULL' in item['Browser'].keys() else item['Browser']['S'],
-    None if 'NULL' in item['OS'].keys() else item['OS']['S'],
-    None if 'NULL' in item['Webkit'].keys() else item['Webkit']['S'],
-    None if 'NULL' in item['Version'].keys() else item['Version']['S'],
-    datetime.datetime.strptime(
-      item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
+  '''Parses a DynamoDB item as a browser object.
+
+  Parameters
+  ----------
+  item : dict
+    The raw DynamoDB item.
+
+  Raises
+  ------
+  toItemException
+    When the item is missing the required keys to parse into an object.
+
+  Returns
+  -------
+  browser : Browser
+    The browser object parsed from the DynamoDB item.
+  '''
+  try:
+    return Browser(
+      item['App']['S'], item['PK']['S'].split('#')[1], item['Width']['N'],
+      item['Height']['N'], item['DateVisited']['S'],
+      None if 'NULL' in item['Device'].keys() else item['Device']['S'],
+      None if 'NULL' in item['DeviceType'].keys() else item['DeviceType']['S'],
+      None if 'NULL' in item['Browser'].keys() else item['Browser']['S'],
+      None if 'NULL' in item['OS'].keys() else item['OS']['S'],
+      None if 'NULL' in item['Webkit'].keys() else item['Webkit']['S'],
+      None if 'NULL' in item['Version'].keys() else item['Version']['S'],
+      datetime.datetime.strptime(
+        item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
+      )
     )
-  )
+  except Exception as e:
+    print( f'ERROR itemToBrowser: { e }' )
+    raise toItemException( 'browser' ) from e
