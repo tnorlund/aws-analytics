@@ -109,7 +109,7 @@ class Visit:
     self.prevSlug = prevSlug
     self.nextTitle = nextTitle
     self.nextSlug = nextSlug
-    self.timeOnPage =  None if np.isnan( timeOnPage ) else timeOnPage
+    self.timeOnPage =  None if str(timeOnPage) == 'nan' else timeOnPage
 
   def key( self ):
     '''Returns the Primary Key of the visit.
@@ -245,6 +245,6 @@ def itemToVisit( item ):
         if 'NULL' in item['NextSlug'].keys()
         else  item['NextSlug']['S']
     )
-  except Exception as e:
+  except KeyError as e:
     print( f'ERROR itemToVisit: {e}' )
     raise toItemException( 'visit' ) from e

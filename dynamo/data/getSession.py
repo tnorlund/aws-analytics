@@ -7,7 +7,10 @@ sys.path.append(
 )
 from dynamo.entities import itemToVisit, itemToSession # pylint: disable=wrong-import-position
 
-dynamo = boto3.client( 'dynamodb' )
+dynamo = boto3.client(
+  'dynamodb', 
+  region_name = os.environ.get( 'REGION_NAME' )
+)
 
 def getSession( session ):
   '''Gets the session and visits from the table.

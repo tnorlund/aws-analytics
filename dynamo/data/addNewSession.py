@@ -7,7 +7,11 @@ sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
 from dynamo.entities import Session # pylint: disable=wrong-import-position
-dynamo = boto3.client( 'dynamodb' )
+
+dynamo = boto3.client(
+  'dynamodb',
+  region_name = os.environ.get( 'REGION_NAME' )
+)
 
 def addNewSession( visitor, browsers, visits ):
   '''Adds a new session to the table for the given visitor.

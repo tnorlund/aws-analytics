@@ -89,6 +89,6 @@ def itemToVisitor( item ):
       item['PK']['S'].split('#')[1],
       int( item['NumberSessions']['N'] )
     )
-  except Exception as e:
+  except KeyError as e:
     print( f'ERROR itemToVisitor: {e}' )
     raise toItemException( 'visitor' ) from e

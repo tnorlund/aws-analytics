@@ -198,7 +198,7 @@ def requestToLocation( req ):
       req['domains'], req['as'] if 'as' in req else None, req['isp'],
       req['proxy']['proxy'], req['proxy']['vpn'], req['proxy']['tor']
     )
-  except Exception as e:
+  except KeyError as e:
     print( f'ERROR requestToLocation: {e}' )
     raise toItemException( 'location' ) from e
 
@@ -244,6 +244,6 @@ def itemToLocation( item ):
         item['DateAdded']['S'], '%Y-%m-%dT%H:%M:%S.%fZ'
       )
     )
-  except Exception as e:
+  except KeyError as e:
     print( f'ERROR itemToLocation: {e}' )
     raise toItemException( 'location' ) from e

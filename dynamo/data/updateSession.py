@@ -2,7 +2,10 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 
-dynamo = boto3.client( 'dynamodb' )
+dynamo = boto3.client(
+  'dynamodb', 
+  region_name = os.environ.get( 'REGION_NAME' )
+)
 
 def updateSession( session, visits ):
   '''Updates a session with new visits and attributes.

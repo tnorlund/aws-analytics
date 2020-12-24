@@ -8,7 +8,10 @@ sys.path.append(
 from dynamo.entities import itemToVisit, itemToSession, itemToPage # pylint: disable=wrong-import-position
 from dynamo.entities import itemToDay, itemToWeek, itemToMonth, itemToYear # pylint: disable=wrong-import-position
 
-dynamo = boto3.client( 'dynamodb' )
+dynamo = boto3.client(
+  'dynamodb', 
+  region_name = os.environ.get( 'REGION_NAME' )
+)
 
 def getPageDetails( page ):
   '''Gets a page and its days, weeks, months, and years of analytics.

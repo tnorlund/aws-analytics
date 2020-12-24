@@ -142,6 +142,6 @@ def itemToSession( item ):
       float( item['AverageTime']['N'] ),
       float( item['TotalTime']['N'] )
     )
-  except Exception as e:
+  except KeyError as e:
     print( f'ERROR itemToSession: {e}' )
     raise toItemException( 'session' ) from e

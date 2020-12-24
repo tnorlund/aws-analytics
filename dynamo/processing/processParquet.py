@@ -6,7 +6,7 @@ import datetime
 import boto3
 import numpy as np
 import pandas as pd
-import pyarrow # pylint: disable=unused-import
+# import pyarrow # pylint: disable=unused-import
 import urllib3
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
@@ -19,8 +19,14 @@ from dynamo.entities import requestToLocation # pylint: disable=wrong-import-pos
 from dynamo.entities import Browser # pylint: disable=wrong-import-position
 
 http = urllib3.PoolManager()
-s3 = boto3.client('s3')
-dynamo = boto3.client('dynamodb')
+s3 = boto3.client(
+  's3',
+  region_name = os.environ.get( 'REGION_NAME' )
+)
+dynamo = boto3.client(
+  'dynamodb', 
+  region_name = os.environ.get( 'REGION_NAME' )
+)
 
 def processParquet( key ):
   '''Adds the data from a '.parquet' file to the DynamoDB table.

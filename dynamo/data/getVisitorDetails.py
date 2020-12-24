@@ -8,7 +8,10 @@ sys.path.append(
 from dynamo.entities import itemToVisitor, itemToVisit, itemToSession # pylint: disable=wrong-import-position
 from dynamo.entities import itemToLocation, itemToBrowser # pylint: disable=wrong-import-position
 
-dynamo = boto3.client( 'dynamodb' )
+dynamo = boto3.client(
+  'dynamodb', 
+  region_name = os.environ.get( 'REGION_NAME' )
+)
 
 def getVisitorDetails( visitor ):
   '''Gets the visitor and their details from the table.
