@@ -2,6 +2,44 @@ import re
 from .util import objectToItemAtr, toItemException
 
 class Week:
+  '''A class to represent a week item for DynamoDB.
+
+  Attributes
+  ----------
+  slug : str
+    The slug of the page visited.
+  title : str
+    The title of the page visited.
+  year : int
+    The year the page was visited.
+  week : int
+    The week the page was visited.
+  numberVisitors : int
+    The number of page's unique visitors.
+  averageTime : float
+    The average number of time spent on the page until going to another page
+    on the website.
+  percentChurn : float
+    The percentage of the visitors that churned on this page rather than
+    continuing to visit other pages.
+  fromPage : dict
+    The different pages the visitors came from and their ratios.
+  toPage : dict
+    The different pages the visitors when to and their ratios.
+
+  Methods
+  -------
+  key():
+    Returns the Primary Key of the week.
+  pk():
+    Returns the Partition Key of the week.
+  gsi1():
+    Returns the Primary Key of the first Global Secondary Index of the week.
+  gsi1pk():
+    Returns the Partition Key of the first Global Secondary Index of the week.
+  toItem():
+    Returns the week as a parsed DynamoDB item.
+  '''
   def __init__(
     self, slug, title, date, numberVisitors, averageTime,
     percentChurn, fromPage, toPage
@@ -31,7 +69,7 @@ class Week:
     '''
     dateMatch = re.match( r'(\d+)-(\d+)', date )
     if not dateMatch:
-      raise ValueError( 'Must give month as "<year>-<month>-<day>"' )
+      raise ValueError( 'Must give week as "<year>-<week>"' )
     if len( dateMatch.group( 1 ) ) != 4:
       raise ValueError( 'Must give valid year' )
     if int( dateMatch.group( 2 ) ) < 0 or int( dateMatch.group(2) ) > 52:
@@ -40,9 +78,9 @@ class Week:
     self.title = title
     self.year = int( dateMatch.group( 1 ) )
     self.week = int( dateMatch.group( 2 ) )
-    self.numberVisitors = numberVisitors
-    self.averageTime = averageTime
-    self.percentChurn = percentChurn
+    self.numberVisitors = int( numberVisitors )
+    self.averageTime = float( averageTime )
+    self.percentChurn = float( percentChurn )
     self.fromPage = fromPage
     self.toPage = toPage
 
@@ -55,6 +93,13 @@ class Week:
       'PK': { 'S': f'PAGE#{ self.slug }' },
       'SK': { 'S': f'#WEEK#{ self.year }-{ str( self.week ).zfill( 2 ) }' }
     }
+
+  def pk( self ):
+    '''Returns the Partition Key of the week.
+
+    This is used to retrieve the page-specific data from the table.
+    '''
+    return { 'S': f'PAGE#{ self.slug }' }
 
   def gsi1( self ):
     '''Returns the Primary Key of the first Global Secondary Index of the
@@ -99,7 +144,7 @@ class Week:
     }
 
   def __repr__( self ):
-    return f'{ self.title }-{ self.year }/{ str( self.week ).zfill( 2 ) }'
+    return f'{ self.title } - { self.year }/{ str( self.week ).zfill( 2 ) }'
 
 def itemToWeek( item ):
   '''Parses a DynamoDB item as a week object.
@@ -137,4 +182,4 @@ def itemToWeek( item ):
     )
   except Exception as e:
     print( f'ERROR itemToDay: {e}' )
-    raise toItemException( 'day' ) from e
+    raise toItemException( 'week' ) from e

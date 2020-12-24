@@ -31,6 +31,8 @@ class Month:
   -------
   key():
     Returns the Primary Key of the month.
+  pk():
+    Returns the Partition Key of the month.
   gsi1():
     Returns the Primary Key of the first Global Secondary Index of the month.
   gsi1pk():
@@ -67,7 +69,7 @@ class Month:
     '''
     dateMatch = re.match( r'(\d+)-(\d+)', date )
     if not dateMatch:
-      raise ValueError( 'Must give month as "<year>-<month>-<day>"' )
+      raise ValueError( 'Must give month as "<year>-<month>"' )
     if len( dateMatch.group( 1 ) ) != 4:
       raise ValueError( 'Must give valid year' )
     if int( dateMatch.group( 2 ) ) < 1 or int( dateMatch.group(2) ) > 12:
@@ -76,9 +78,9 @@ class Month:
     self.title = title
     self.year = int( dateMatch.group( 1 ) )
     self.month = int( dateMatch.group( 2 ) )
-    self.numberVisitors = numberVisitors
-    self.averageTime = averageTime
-    self.percentChurn = percentChurn
+    self.numberVisitors = int( numberVisitors )
+    self.averageTime = float( averageTime )
+    self.percentChurn = float( percentChurn )
     self.fromPage = fromPage
     self.toPage = toPage
 
@@ -91,6 +93,13 @@ class Month:
       'PK': { 'S': f'PAGE#{ self.slug }' },
       'SK': { 'S': f'#MONTH#{ self.year }-{ str( self.month ).zfill( 2 ) }' }
     }
+  
+  def pk( self ):
+    '''Returns the Partition Key of the month.
+
+    This is used to retrieve the page-specific data from the table.
+    '''
+    return { 'S': f'PAGE#{ self.slug }' }
 
   def gsi1( self ):
     '''Returns the Primary Key of the first Global Secondary Index of the
@@ -135,7 +144,7 @@ class Month:
     }
 
   def __repr__( self ):
-    return f'{ self.title }-{ self.year }/{ str( self.month ).zfill( 2 ) }'
+    return f'{ self.title } - { self.year }/{ str( self.month ).zfill( 2 ) }'
 
 def itemToMonth( item ):
   '''Parses a DynamoDB item as a month object.

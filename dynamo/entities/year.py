@@ -1,6 +1,42 @@
 from .util import objectToItemAtr, toItemException
 
 class Year:
+  '''A class to represent a year item for DynamoDB.
+
+  Attributes
+  ----------
+  slug : str
+    The slug of the page visited.
+  title : str
+    The title of the page visited.
+  year : int
+    The year of the visits.
+  numberVisitors : int
+    The number of page's unique visitors.
+  averageTime : float
+    The average number of time spent on the page until going to another page
+    on the website.
+  percentChurn : float
+    The percentage of the visitors that churned on this page rather than
+    continuing to visit other pages.
+  fromPage : dict
+    The different pages the visitors came from and their ratios.
+  toPage : dict
+    The different pages the visitors when to and their ratios.
+
+  Methods
+  -------
+  key():
+    Returns the Primary Key of the year.
+  pk():
+    Returns the Partition Key of the year.
+  gsi1():
+    Returns the Primary Key of the first Global Secondary Index of the year.
+  gsi1pk():
+    Returns the Partition Key of the first Global Secondary Index of the year.
+  toItem():
+    Returns the year as a parsed DynamoDB item.
+  '''
   def __init__(
     self, slug, title, year, numberVisitors, averageTime,
     percentChurn, fromPage, toPage
@@ -28,14 +64,14 @@ class Year:
     toPage : dict
       The different pages the visitors when to and their ratios.
     '''
-    if len( year ) != 4:
+    if len( str( year ) ) != 4:
       raise ValueError( 'Must give valid year' )
     self.slug = slug
     self.title = title
     self.year = int( year )
-    self.numberVisitors = numberVisitors
-    self.averageTime = averageTime
-    self.percentChurn = percentChurn
+    self.numberVisitors = int( numberVisitors )
+    self.averageTime = float( averageTime )
+    self.percentChurn = float( percentChurn )
     self.fromPage = fromPage
     self.toPage = toPage
 
@@ -48,6 +84,13 @@ class Year:
       'PK': { 'S': f'PAGE#{ self.slug }' },
       'SK': { 'S': f'#YEAR#{ self.year }' }
     }
+
+  def pk( self ):
+    '''Returns the Partition Key of the year.
+
+    This is used to retrieve the page-specific data from the table.
+    '''
+    return { 'S': f'PAGE#{ self.slug }' }
 
   def gsi1( self ):
     '''Returns the Primary Key of the first Global Secondary Index of the
@@ -92,7 +135,7 @@ class Year:
     }
 
   def __repr__( self ):
-    return f'{ self.title }-{ self.year }/{ self.year }'
+    return f'{ self.title } - { self.year }'
 
 def itemToYear( item ):
   '''Parses a DynamoDB item as a year object.

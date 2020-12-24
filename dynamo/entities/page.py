@@ -60,9 +60,9 @@ class Page:
     '''
     self.slug = slug
     self.title = title
-    self.numberVisitors = numberVisitors
-    self.averageTime = averageTime
-    self.percentChurn = percentChurn
+    self.numberVisitors = int( numberVisitors )
+    self.averageTime = float( averageTime )
+    self.percentChurn = float( percentChurn )
     self.fromPage = fromPage
     self.toPage = toPage
 
@@ -75,6 +75,13 @@ class Page:
       'PK': { 'S': f'PAGE#{ self.slug }' },
       'SK': { 'S': '#PAGE' }
     }
+  
+  def pk( self ):
+    '''Returns the Partition Key of the page.
+
+    This is used to retrieve the page-specific data from the table.
+    '''
+    return { 'S': f'PAGE#{ self.slug }' }
 
   def gsi1( self ):
     '''Returns the Primary Key of the first Global Secondary Index of the

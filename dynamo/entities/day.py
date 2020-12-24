@@ -81,9 +81,9 @@ class Day:
     self.year = int( dateMatch.group( 1 ) )
     self.month = int( dateMatch.group( 2 ) )
     self.day = int( dateMatch.group( 3 ) )
-    self.numberVisitors = numberVisitors
-    self.averageTime = averageTime
-    self.percentChurn = percentChurn
+    self.numberVisitors = int( numberVisitors )
+    self.averageTime = float( averageTime )
+    self.percentChurn = float( percentChurn )
     self.fromPage = fromPage
     self.toPage = toPage
 
@@ -102,6 +102,13 @@ class Day:
           }-{ str( self.day ).zfill( 2 ) }'''
       }
     }
+  
+  def pk( self ):
+    '''Returns the Partition Key of the day.
+
+    This is used to retrieve the page-specific data from the table.
+    '''
+    return { 'S': f'PAGE#{ self.slug }' }
 
   def gsi1( self ):
     '''Returns the Primary Key of the first Global Secondary Index of the
@@ -152,7 +159,7 @@ class Day:
   def __repr__( self ):
     return f'''{
       self.title
-    }-{
+    } - {
       self.year
     }/{
       str( self.month ).zfill( 2 )
