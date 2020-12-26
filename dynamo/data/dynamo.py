@@ -188,7 +188,7 @@ class DynamoClient:
       The result of adding a visitor's page visit to the table.
     '''
     if not isinstance( visit, Visit ):
-      raise ValueError( 'Must pass a Location object' )
+      raise ValueError( 'Must pass a Visit object' )
     try:
       self.client.put_item(
         TableName = self.tableName,
@@ -204,6 +204,61 @@ class DynamoClient:
         }
       return { 'error': 'Could not add new page visit to table' }
 
+  def removeVisit( self, visit ):
+    '''Removes a visit from the table.
+
+    Parameters
+    ----------
+    visit : Visit
+      The visit to be removed from the table.
+
+    Returns
+    -------
+    result : dict
+      The result of removing the the visit to the table.
+    '''
+    if not isinstance( visit, Visit ):
+      raise ValueError( 'Must pass a Visit object' )
+    try:
+      self.client.delete_item(
+        TableName = self.tableName,
+        Key = visit.key(),
+        ConditionExpression = 'attribute_exists(PK)'
+      )
+      return { 'visit': visit }
+    except ClientError as e:
+      print( f'ERROR removeVisit: { e }' )
+      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+        return { 'error': f'Visit not in table { visit }' }
+      return { 'error': 'Could not remove visit from table' }
+
+  def addVisits( self, visits ):
+    '''Adds a visitor's page visit to the table.
+
+    Parameters
+    ----------
+    visits : list[ Visit ]
+      The visitor's page visits to be added to the table.
+
+    Returns
+    -------
+    result : dict
+      The result of adding a visitor's page visits to the table.
+    '''
+    if any( not isinstance( visit, Visit ) for visit in visits ):
+      raise ValueError( 'Must pass a Visit objects' )
+    try:
+      self.client.batch_write_item(
+        RequestItems = {
+          self.tableName: [
+            { 'PutRequest': { 'Item': visit.toItem() } }
+            for visit in visits
+          ] },
+      )
+      return { 'visits': visits }
+    except ClientError as e:
+      print( f'ERROR addVisits: { e }')
+      return { 'error': 'Could not add new page visits to table' }
 
   def getSessionDetails( self, session ):
     '''Gets the session and visits from the table.

@@ -12,7 +12,7 @@ def visitor():
 
 @pytest.fixture
 def location():
-  return Location( 
+  return Location(
     '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
     -118.819444, '91361', '-08:00', ['cpe-75-82-84-171.socal.res.rr.com'],
     {
@@ -202,3 +202,45 @@ def test_addVisit( dynamo_client, dynamo_test, table_name, visit ):
   result = DynamoClient( table_name ).addVisit( visit )
   assert 'visit' in result.keys()
   assert result['visit'] == visit
+
+def test_duplicate_addVisit( dynamo_client, dynamo_test, table_name, visit ):
+  client = DynamoClient( table_name )
+  client.addVisit( visit )
+  result = client.addVisit( visit )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Visitor\'s page visit is already in table ' \
+    + f'{ visit }'
+
+def test_parameter_addVisit( dynamo_client, dynamo_test, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addVisit( {} )
+  assert str( e.value ) == 'Must pass a Visit object'
+
+def test_removeVisit( dynamo_client, dynamo_test, table_name, visit ):
+  client = DynamoClient( table_name )
+  client.addVisit( visit )
+  result = client.removeVisit( visit )
+  assert 'visit' in result.keys()
+  assert result['visit'] == visit
+
+def test_none_removeVisit(
+  dynamo_client, dynamo_test, table_name, visit
+):
+  result = DynamoClient( table_name ).removeVisit( visit )
+  assert 'error' in result.keys()
+  assert result['error'] == f'Visit not in table { visit }'
+
+def test_parameter_removeVisit( dynamo_client, dynamo_test, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).removeVisit( {} )
+  assert str( e.value ) == 'Must pass a Visit object'
+
+def test_addVisits( dynamo_client, dynamo_test, table_name, visit ):
+  result = DynamoClient( table_name ).addVisits( [visit] * 5 )
+  assert 'visits' in result.keys()
+  assert result['visits'] == [visit] * 5
+
+def test_parameter_addVisits( dynamo_client, dynamo_test, table_name, visit ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addVisits( ( [visit] * 5 ) + [5] )
+  assert str( e.value ) == 'Must pass a Visit objects'
