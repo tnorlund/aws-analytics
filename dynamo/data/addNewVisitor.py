@@ -116,7 +116,6 @@ def addSession( session ):
       }
     return { 'error': 'Could not add new session to table' }
 
-
 def addBrowsers( browsers ):
   '''Adds the visitor's browser to the table.
 
