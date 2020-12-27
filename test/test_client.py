@@ -22,7 +22,8 @@ def location():
       'route': '75.82.0.0/15',
       'domain': 'https://www.spectrum.com',
       'type': 'Cable/DSL/ISP'
-    }, 'Charter Communications', False, False, False
+    },
+    'Charter Communications', False, False, False, '2020-01-01T00:00:00.000Z'
   )
 
 @pytest.fixture
@@ -57,6 +58,24 @@ def browser():
       'Mobile/15E148 Safari/604.1',
     '0.0.0.0', 100, 200, '2020-01-01T00:00:00.000Z'
   )
+
+@pytest.fixture
+def browsers():
+  return[
+    Browser(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
+        'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 ' + \
+        'Mobile/15E148 Safari/604.1',
+      '0.0.0.0', 100, 200, '2020-01-01T00:00:00.000Z',
+      dateAdded = '2020-01-01T00:00:00.000Z'
+    ),
+    Browser(
+      'Mozilla/5.0 (Linux; Android 11; Pixel 4 XL) AppleWebKit/537.36 ' + \
+        '(KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36',
+      '0.0.0.0', 100, 200, '2020-01-01T00:01:00.000Z',
+      dateAdded = '2020-01-01T00:00:00.000Z'
+    )
+  ]
 
 @pytest.fixture
 def table_init( dynamo_client, table_name ):
@@ -406,19 +425,65 @@ def test_none_getSessionDetails(
   assert result['error'] == 'Session not in table'
 
 def test_getSessionDetails(
-  dynamo_client, table_init, table_name, visitor, browser, visits, session
+  dynamo_client, table_init, table_name, visitor, browsers, visits, session
 ):
   client = DynamoClient( table_name )
   client.addVisitor( visitor )
   client.addNewSession(
-    visitor, [browser] * 2, visits
+    visitor, browsers, visits
   )
   result = client.getSessionDetails( session )
   assert 'visits' in result.keys()
-  assert all ([
+  assert all( [
     dict( result['visits'][index] ) == dict(visits[index])
     for index in range( len( visits ) )
   ] )
   assert 'session' in result.keys()
   assert result['session'].ip == visitor.ip
   assert result['session'].sessionStart == visits[0].date
+
+def test_addNewVisitor(
+  dynamo_client, table_init, table_name, visitor, browsers, visits, session,
+  location
+):
+  client = DynamoClient( table_name )
+  result = client.addNewVisitor(
+    visitor, location, browsers, visits
+  )
+  assert 'visitor' in result.keys()
+  assert result['visitor'] == visitor
+  assert 'browsers' in result.keys()
+  assert result['browsers'] == browsers
+  assert 'location' in result.keys()
+  assert result['location'] == location
+  assert 'visits' in result.keys()
+  assert result['visits'] == visits
+  assert 'session' in result.keys()
+  assert result['session'].ip == visitor.ip
+  assert result['session'].sessionStart == visits[0].date
+
+def test_getVisitorDetails(
+  dynamo_client, table_init, table_name, visitor, browsers, visits, session,
+  location
+):
+  client = DynamoClient( table_name )
+  client.addNewVisitor(
+    visitor, location, browsers, visits
+  )
+  result = client.getVisitorDetails( visitor )
+  assert 'visitor' in result.keys()
+  assert dict( result['visitor'] ) == dict( visitor )
+  assert 'browsers' in result.keys()
+  assert all( [
+    dict( result['browsers'][index] ) == dict( browsers[index] )
+    for index in range( len( browsers ) )
+  ] )
+  # assert dict( result['browsers'][0] ) == dict( browsers[0] )
+  assert 'location' in result.keys()
+  assert dict( result['location'] ) == dict( location )
+  assert 'visits' in result.keys()
+  assert all( [
+    dict( result['visits'][index] ) == dict(visits[index])
+    for index in range( len( visits ) )
+  ] )
+  assert 'sessions' in result.keys()

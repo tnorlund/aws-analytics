@@ -156,6 +156,20 @@ class Browser:
   def __repr__( self ):
     return f"{ self.ip } - { self.browser }"
 
+  def __iter__( self ):
+    yield 'app', self.app
+    yield 'ip', self.ip
+    yield 'dateVisited', self.dateVisited
+    yield 'width', self.width
+    yield 'height', self.height
+    yield 'device', self.device
+    yield 'deviceType', self.deviceType
+    yield 'browser', self.browser
+    yield 'os', self.os
+    yield 'webkit', self.webkit
+    yield 'version', self.version
+    yield 'dateAdded', self.dateAdded
+
   def _matchMac( self ):
     # Mac - Safari
     safari_match = re.match(
@@ -248,7 +262,6 @@ class Browser:
       self.app
     )
     if match:
-      print('matching android')
       self.device = match.group(2)
       self.deviceType = 'mobile'
       self.browser = 'chrome'

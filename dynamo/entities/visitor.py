@@ -63,6 +63,10 @@ class Visitor:
       'NumberSessions': { 'N': str( self.numberSessions ) }
     }
 
+  def __iter__( self ):
+    yield 'ip', self.ip
+    yield 'numberSessions', self.numberSessions
+
   def __repr__( self ):
     return f"{ self.ip } - { self.numberSessions }"
 

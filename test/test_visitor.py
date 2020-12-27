@@ -35,6 +35,13 @@ def test_repr():
   visitor = Visitor( '0.0.0.0', 1 )
   assert repr( visitor ) == '0.0.0.0 - 1'
 
+def test_dict():
+  visitor = Visitor( '0.0.0.0', 1 )
+  assert dict( visitor ) == {
+    'ip': '0.0.0.0',
+    'numberSessions': 1
+  }
+
 def test_itemToVisitor():
   visitor = Visitor( '0.0.0.0', 1 )
   newVisitor = itemToVisitor( visitor.toItem() )

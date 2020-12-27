@@ -102,7 +102,11 @@ class Location:
     self.proxy = proxy
     self.vpn = vpn
     self.tor = tor
-    self.dateAdded = dateAdded
+    self.dateAdded = dateAdded \
+      if isinstance( dateAdded, datetime.datetime ) \
+      else datetime.datetime.strptime(
+        dateAdded, '%Y-%m-%dT%H:%M:%S.%fZ'
+      )
 
   def key( self ):
     '''Returns the Primary Key of the location.
