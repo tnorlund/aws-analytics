@@ -1,7 +1,5 @@
 import datetime
-from dotenv import load_dotenv
 import pytest
-load_dotenv()
 from dynamo.entities import Browser, itemToBrowser # pylint: disable=wrong-import-position
 
 @pytest.fixture

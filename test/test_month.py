@@ -1,8 +1,5 @@
-from dotenv import load_dotenv
 import pytest
-load_dotenv()
 from dynamo.entities import Month, itemToMonth # pylint: disable=wrong-import-position
-
 
 def test_init():
   month = Month(
