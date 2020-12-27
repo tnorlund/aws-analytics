@@ -116,6 +116,12 @@ class Session:
   def __repr__( self ):
     return f'{ self.ip } - { self.totalTime }'
 
+  def __iter__( self ):
+    yield 'sessionStart', self.sessionStart
+    yield 'ip', self.ip
+    yield 'avgTime', self.avgTime
+    yield 'totalTime', self.totalTime
+
 def itemToSession( item ):
   '''Parses a DynamoDB item as a session object.
 

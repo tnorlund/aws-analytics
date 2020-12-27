@@ -369,37 +369,37 @@ def test_parameter_removeBrowser( dynamo_client, table_init, table_name ):
     assert DynamoClient( table_name ).removeBrowser( {} )
   assert str( e.value ) == 'Must pass a Browser object'
 
-def test_addBrowsers( dynamo_client, table_init, table_name, browser ):
-  result = DynamoClient( table_name ).addBrowsers( [browser] * 5 )
+def test_addBrowsers( dynamo_client, table_init, table_name, browsers ):
+  result = DynamoClient( table_name ).addBrowsers( browsers )
   assert 'browsers' in result.keys()
-  assert result['browsers'] == [browser] * 5
+  assert result['browsers'] == browsers
 
 def test_parameter_addBrowsers(
-  dynamo_client, table_init, table_name, browser
+  dynamo_client, table_init, table_name,
 ):
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addBrowsers( {} )
   assert str( e.value ) == 'Must pass a list'
 
 def test_parameter_elements_addBrowsers(
-  dynamo_client, table_init, table_name, browser
+  dynamo_client, table_init, table_name, browsers
 ):
   with pytest.raises( ValueError ) as e:
-    assert DynamoClient( table_name ).addBrowsers( ( [browser] * 5 ) + [5] )
+    assert DynamoClient( table_name ).addBrowsers( ( browsers ) + [5] )
   assert str( e.value ) == 'Must pass Browser objects'
 
 def test_addNewSession(
-  dynamo_client, table_init, table_name, visitor, browser, visits
+  dynamo_client, table_init, table_name, visitor, browsers, visits
 ):
   client = DynamoClient( table_name )
   client.addVisitor( visitor )
   result = client.addNewSession(
-    visitor, [browser] * 2, visits
+    visitor, browsers, visits
   )
   assert 'visitor' in result.keys()
   assert result['visitor'] == visitor
   assert 'browsers' in result.keys()
-  assert result['browsers'] == [browser] * 2
+  assert result['browsers'] == browsers
   assert 'visits' in result.keys()
   assert result['visits'] == visits
   assert 'session' in result.keys()
@@ -407,11 +407,11 @@ def test_addNewSession(
   assert result['session'].sessionStart == visits[0].date
 
 def test_visitor_addNewSession(
-  dynamo_client, table_init, table_name, visitor, browser, visits
+  dynamo_client, table_init, table_name, visitor, browsers, visits
 ):
   client = DynamoClient( table_name )
   result = client.addNewSession(
-    visitor, [browser] * 2, visits
+    visitor, browsers, visits
   )
   assert 'error' in result.keys()
   assert result['error'] == 'Visitor not in table'
@@ -478,7 +478,6 @@ def test_getVisitorDetails(
     dict( result['browsers'][index] ) == dict( browsers[index] )
     for index in range( len( browsers ) )
   ] )
-  # assert dict( result['browsers'][0] ) == dict( browsers[0] )
   assert 'location' in result.keys()
   assert dict( result['location'] ) == dict( location )
   assert 'visits' in result.keys()
@@ -487,3 +486,19 @@ def test_getVisitorDetails(
     for index in range( len( visits ) )
   ] )
   assert 'sessions' in result.keys()
+
+def test_updateSession(
+  dynamo_client, table_init, table_name, visitor, browsers, visits, session,
+  location
+):
+  client = DynamoClient( table_name )
+  client.addNewSession( visitor, browsers, visits )
+  client.addSession( session )
+  result = client.updateSession( session, visits )
+  assert 'visits' in result.keys()
+  assert all( [
+    dict( result['visits'][index] ) == dict(visits[index])
+    for index in range( len( visits ) )
+  ] )
+  assert 'session' in result.keys()
+  assert dict( result['session'] ) == dict( session )

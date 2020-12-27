@@ -592,3 +592,40 @@ class DynamoClient:
     except ClientError as e:
       print( f'ERROR getSession: { e }')
       return { 'error': 'Could not get session from table' }
+
+  def updateSession( self, session, visits ):
+    '''Updates a session with new visits and attributes.
+
+    Parameters
+    ----------
+    session : Session
+      The session to change the average time on page and the total time on the
+      website.
+    visits : list[ Visit ]
+      All of the visits that belong to the session.
+    '''
+    pageTimes = [
+      visit.timeOnPage for visit in visits
+      if isinstance( visit.timeOnPage, float )
+    ]
+    session = Session(
+      visits[0].date,
+      visits[0].ip,
+      np.mean( pageTimes ) if len( pageTimes ) > 1 else pageTimes[0],
+      ( visits[-1].date - visits[0].date ).total_seconds()
+    )
+    try:
+      self.client.put_item(
+        TableName = self.tableName,
+        Item = session.toItem(),
+        ConditionExpression = 'attribute_exists(PK)'
+      )
+      result = self.addVisits( visits )
+      if 'error' in result.keys():
+        return { 'error': result['error'] }
+      return { 'session': session, 'visits': visits }
+    except ClientError as e:
+      print( f'ERROR updateSession: { e }' )
+      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+        return { 'error': f'Session not in table { session }' }
+      return { 'error': 'Could not update session in table' }
