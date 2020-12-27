@@ -1,6 +1,4 @@
-from dotenv import load_dotenv
 import pytest
-load_dotenv()
 from dynamo.entities import Day, itemToDay # pylint: disable=wrong-import-position
 
 
