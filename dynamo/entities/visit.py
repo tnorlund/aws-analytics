@@ -109,7 +109,12 @@ class Visit:
     self.prevSlug = prevSlug
     self.nextTitle = nextTitle
     self.nextSlug = nextSlug
-    self.timeOnPage =  None if str(timeOnPage) == 'nan' else timeOnPage
+    if str(timeOnPage) == 'nan':
+      self.timeOnPage = None
+    elif timeOnPage is None:
+      self.timeOnPage = timeOnPage
+    else:
+      self.timeOnPage = float( timeOnPage )
 
   def key( self ):
     '''Returns the Primary Key of the visit.

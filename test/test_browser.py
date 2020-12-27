@@ -217,7 +217,7 @@ def test_repr( ip, pixel_app ):
 def test_itemToBrowser( ip, pixel_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    pixel_app, ip, 100, 200, '2020-01-01T00:00:00.000Z', 
+    pixel_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
     dateAdded = currentTime.strftime( '%Y-%m-%dT%H:%M:%S.' ) \
       + currentTime.strftime('%f')[:3] + 'Z'
   )
