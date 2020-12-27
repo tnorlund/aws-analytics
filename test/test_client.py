@@ -32,6 +32,22 @@ def visit():
   )
 
 @pytest.fixture
+def session():
+  return Session( '2020-01-01T00:00:00.000Z', '0.0.0.0', 60, 60 )
+
+def visits():
+  return[
+    Visit(
+      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+    ),
+    Visit(
+      '2020-01-01T00:00:01.000Z', '0.0.0.0', '0', 'Blog', '/blog', 
+      '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    )
+  ]
+
+@pytest.fixture
 def dynamo_test( dynamo_client, table_name ):
   dynamo_client.create_table(
     TableName=table_name,
@@ -82,8 +98,7 @@ def dynamo_test( dynamo_client, table_name ):
   )
   yield
 
-def test_none_getSessionDetails( dynamo_client, dynamo_test, table_name ):
-  session = Session( '2020-01-01T00:00:00.000Z', '0.0.0.0', 0.1, 0.1 )
+def test_none_getSessionDetails( dynamo_client, dynamo_test, table_name, session ):
   client = DynamoClient( table_name )
   result = client.getSessionDetails( session )
   assert 'error' in result.keys()
@@ -244,3 +259,42 @@ def test_parameter_addVisits( dynamo_client, dynamo_test, table_name, visit ):
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addVisits( ( [visit] * 5 ) + [5] )
   assert str( e.value ) == 'Must pass a Visit objects'
+
+def test_addSession( dynamo_client, dynamo_test, table_name, session ):
+  result = DynamoClient( table_name ).addSession( session )
+  assert 'session' in result.keys()
+  assert result['session'] == session
+
+def test_duplicate_addSession(
+  dynamo_client, dynamo_test, table_name, session
+):
+  client = DynamoClient( table_name )
+  client.addSession( session )
+  result = client.addSession( session )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Visitor\'s session is already in table ' \
+    + f'{ session }'
+
+def test_parameter_addSession( dynamo_client, dynamo_test, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addSession( {} )
+  assert str( e.value ) == 'Must pass a Session object'
+
+def test_removeSession( dynamo_client, dynamo_test, table_name, session ):
+  client = DynamoClient( table_name )
+  client.addSession( session )
+  result = client.removeSession( session )
+  assert 'session' in result.keys()
+  assert result['session'] == session
+
+def test_none_removeSession(
+  dynamo_client, dynamo_test, table_name, session
+):
+  result = DynamoClient( table_name ).removeSession( session )
+  assert 'error' in result.keys()
+  assert result['error'] == f'Session not in table { session }'
+
+def test_parameter_removeSession( dynamo_client, dynamo_test, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).removeSession( {} )
+  assert str( e.value ) == 'Must pass a Session object'

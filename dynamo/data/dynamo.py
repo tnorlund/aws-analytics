@@ -5,7 +5,7 @@ from botocore.exceptions import ClientError
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.entities import Visit, Visitor, Location # pylint: disable=wrong-import-position
+from dynamo.entities import Visit, Visitor, Location, Session # pylint: disable=wrong-import-position
 from dynamo.entities import itemToVisit, itemToSession # pylint: disable=wrong-import-position
 
 class DynamoClient:
@@ -61,7 +61,7 @@ class DynamoClient:
     Returns
     -------
     result : dict
-      The result of removing the the visitor to the table.
+      The result of removing the visitor from the table.
     '''
     if not isinstance( visitor, Visitor ):
       raise ValueError( 'Must pass a Visitor object' )
@@ -157,7 +157,7 @@ class DynamoClient:
     Returns
     -------
     result : dict
-      The result of removing the the location to the table.
+      The result of removing the location from the table.
     '''
     if not isinstance( location, Location ):
       raise ValueError( 'Must pass a Location object' )
@@ -215,7 +215,7 @@ class DynamoClient:
     Returns
     -------
     result : dict
-      The result of removing the the visit to the table.
+      The result of removing the visit from the table.
     '''
     if not isinstance( visit, Visit ):
       raise ValueError( 'Must pass a Visit object' )
@@ -259,6 +259,108 @@ class DynamoClient:
     except ClientError as e:
       print( f'ERROR addVisits: { e }')
       return { 'error': 'Could not add new page visits to table' }
+
+  def addSession( self, session ):
+    '''Adds a visitor's session to the table.
+
+    Parameters
+    ----------
+    session : Session
+      The visitor's session to be added to the table.
+
+    Returns
+    -------
+    result : dict
+      The result of adding a visitor's session to the table.
+    '''
+    if not isinstance( session, Session ):
+      raise ValueError( 'Must pass a Session object' )
+    try:
+      self.client.put_item(
+        TableName = self.tableName,
+        Item = session.toItem(),
+        ConditionExpression = 'attribute_not_exists(PK)'
+      )
+      return { 'session': session }
+    except ClientError as e:
+      print( f'ERROR addsession: { e }')
+      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+        return {
+          'error': f'Visitor\'s session is already in table { session }'
+        }
+      return { 'error': 'Could not add new page visit to table' }
+
+  def removeSession( self, session ):
+    '''Removes a session from the table.
+
+    Parameters
+    ----------
+    session : Visit
+      The visit to be removed from the table.
+
+    Returns
+    -------
+    result : dict
+      The result of removing the session from the table.
+    '''
+    if not isinstance( session, Session ):
+      raise ValueError( 'Must pass a Session object' )
+    try:
+      self.client.delete_item(
+        TableName = self.tableName,
+        Key = session.key(),
+        ConditionExpression = 'attribute_exists(PK)'
+      )
+      return { 'session': session }
+    except ClientError as e:
+      print( f'ERROR removeSession: { e }' )
+      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+        return { 'error': f'Session not in table { session }' }
+      return { 'error': 'Could not remove session from table' }
+
+  # def addNewSession( self, visitor, browsers, visits ):
+  #   '''Adds a new session to the table for the given visitor.
+
+  #   Parameters
+  #   ----------
+  #   visitor : Visitor
+  #     The returning visitor. They will have their number of sessions incremented.
+  #   browsers : list[ Browser ]
+  #     The visitor's browsers to be added to the table.
+  #   visits: list[ Visit ]
+  #     The visits to be added to the table.
+
+  #   Returns
+  #   -------
+  #   result : dict
+  #     The result of adding a new session for a visitor. This could be either the
+  #     error that occurs or the updated visitor, the browsers added, and the
+  #     visits added to the table.
+  #   '''
+  #   result = self.incrementVisitorSessions( visitor )
+  #   if 'error' in result.keys():
+  #     return { 'error': result['error'] }
+  #   visitor = result['visitor']
+  #   result = addBrowsers( browsers )
+  #   if 'error' in result.keys():
+  #     return { 'error': result['error'] }
+  #   result = addSession(
+  #     Session(
+  #       visits[0].date,
+  #       visits[0].ip,
+  #       np.mean( [
+  #         visit.timeOnPage for visit in visits
+  #         if isinstance(visit.timeOnPage, float)
+  #       ] ),
+  #       ( visits[-1].date - visits[0].date ).total_seconds()
+  #     )
+  #   )
+  #   if 'error' in result.keys():
+  #     return { 'error': result['error'] }
+  #   result = addVisits( visits )
+  #   if 'error' in result.keys():
+  #     return { 'error': result['error'] }
+  #   return { 'visitor': visitor, 'browsers': browsers, 'visits': visits }
 
   def getSessionDetails( self, session ):
     '''Gets the session and visits from the table.

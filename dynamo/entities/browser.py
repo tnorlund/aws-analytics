@@ -81,18 +81,20 @@ class Browser:
     '''
     self.app = app
     self.ip = ip
-    self.width = width
-    self.height = height
+    self.width = int( width )
+    self.height = int( height )
     self.dateVisited = datetime.datetime.strptime(
       dateVisited, '%Y-%m-%dT%H:%M:%S.%fZ'
     )
     self.dateAdded = dateAdded
-    result = self._matchMac( app )
-    if not result:
-      result = self._matchWindows( app )
-    elif not result:
-      result = self._matchiPhone( app )
-    elif not result:
+    matched = self._matchMac()
+    if not matched:
+      matched = self._matchWindows()
+    if not matched:
+      matched = self._matchiPhone()
+    if not matched:
+      matched = self._matchAndroid()
+    if not matched:
       self.app = app
       self.device = device
       self.deviceType = deviceType
@@ -147,20 +149,20 @@ class Browser:
   def __repr__( self ):
     return f"{ self.ip } - { self.browser }"
 
-  def _matchMac( self, app ):
+  def _matchMac( self ):
     # Mac - Safari
     safari_match = re.match(
       r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
       r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
       r"(\d+\.\d+\.\d+) Safari\/(\d+\.\d+\.\d+)",
-      app
+      self.app
     )
     # Mac - Chrome
     chrome_match = re.match(
       r"Mozilla\/5\.0 \(Macintosh; Intel Mac OS X (\d+_\d+_\d+)\) " + \
       r"AppleWebKit\/(\d+\.\d+) \(KHTML, like Gecko\) Chrome\/" + \
       r"(\d+\.\d+\.\d+\.\d+) Safari\/(\d+\.\d+)",
-      app
+      self.app
     )
     if safari_match:
       self.device = 'mac'
@@ -180,13 +182,13 @@ class Browser:
       return True
     return False
 
-  def _matchWindows( self, app ):
+  def _matchWindows( self ):
     # Windows - Chrome
     match = re.match(
       r"Mozilla\/5\.0 \(Windows NT (\d+\.\d+); Win64; x64\) AppleWebKit" + \
       r"\/(\d+\.\d+) \(KHTML, like Gecko\) Chrome\/(\d+\.\d+\.\d+\.\d+) " + \
       r"Safari\/(\d+\.\d+)",
-      app
+      self.app
     )
     if match:
       self.device = 'windows'
@@ -198,20 +200,20 @@ class Browser:
       return True
     return False
 
-  def _matchiPhone( self, app ):
+  def _matchiPhone( self ):
     # iPhone - Safari
     iphone_match = re.match(
       r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
       r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Version\/" + \
       r"(\d+\.\d+\.\d+|\d+\.\d) Mobile\/15E148 Safari\/(\d+\.\d+)",
-      app
+      self.app
     )
     # iPhone - App
     app_match = re.match(
       r"Mozilla\/5\.0 \(iPhone; CPU iPhone OS (\d+_\d+) like Mac OS X\) " + \
       r"AppleWebKit\/(\d+\.\d+\.\d+) \(KHTML, like Gecko\) Mobile\/15E148 " + \
       r"(\[[a-zA-Z0-9]+\])",
-      app
+      self.app
     )
     if iphone_match:
       self.device = 'iphone'
@@ -228,6 +230,24 @@ class Browser:
       self.os = app_match.group(1).replace( '_', '.' )
       self.webkit = app_match.group(2)
       self.version = None
+      return True
+    return False
+
+  def _matchAndroid( self ):
+    match = re.match(
+      r"Mozilla/5.0 \(Linux; Android (\d+); ([a-zA-Z\d\s]+)\) AppleWebKit/" + \
+      r"([0-9]+\.[0-9]+) \(KHTML, like Gecko\) " + \
+      r"Chrome/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) Mobile Safari/([0-9]+\.[0-9]+)",
+      self.app
+    )
+    if match:
+      print('matching android')
+      self.device = match.group(2)
+      self.deviceType = 'mobile'
+      self.browser = 'chrome'
+      self.os = match.group(1)
+      self.webkit = match.group(3)
+      self.version = match.group(4)
       return True
     return False
 
