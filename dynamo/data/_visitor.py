@@ -191,14 +191,7 @@ class _Visitor:
           data['location'] = itemToLocation( item )
         elif item['Type']['S'] == 'browser':
           data['browsers'].append( itemToBrowser( item ) )
-        else:
-          raise Exception(
-            f'''Could not parse type: { item }'''
-          )
       return data
-    except KeyError as e:
-      print( f'ERROR getVisitorDetails: {e}')
-      return { 'error': 'Could not get visitor from table' }
     except ClientError as e:
       print( f'ERROR getVisitorDetails: { e }')
       return { 'error': 'Could not get visitor from table' }

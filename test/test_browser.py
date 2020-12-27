@@ -1,42 +1,6 @@
-# pylint: disable=redefined-outer-name, unused-argument
 import datetime
 import pytest
-from dynamo.entities import Browser, itemToBrowser # pylint: disable=wrong-import-position
-
-@pytest.fixture
-def ip():
-  return '0.0.0.0'
-
-@pytest.fixture
-def pixel_app():
-  return 'Mozilla/5.0 (Linux; Android 11; Pixel 4 XL) AppleWebKit/537.36 ' + \
-    '(KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36'
-
-@pytest.fixture
-def mac_chrome_app():
-  return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) ' + \
-    'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'
-
-@pytest.fixture
-def mac_safari_app():
-  return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) ' + \
-    'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 Safari/605.1.15'
-
-@pytest.fixture
-def windows_chrome_app():
-  return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' + \
-    '(KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'
-
-@pytest.fixture
-def iphone_safari_app():
-  return 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
-    'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 Mobile/15E148 ' + \
-    'Safari/604.1'
-
-@pytest.fixture
-def iphone_linkedin_app():
-  return 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) ' + \
-    'AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [LinkedInApp]'
+from dynamo.entities import Browser, itemToBrowser
 
 def test_default_android_init( ip, pixel_app ):
   currentTime = datetime.datetime.now()

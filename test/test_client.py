@@ -6,10 +6,6 @@ from dynamo.entities import Year, Month, Week, Day, Page # pylint: disable=wrong
 from dynamo.data import DynamoClient # pylint: disable=wrong-import-position
 
 @pytest.fixture
-def table_name():
-  return "BlogDB-test"
-
-@pytest.fixture
 def visitor():
   return Visitor( '0.0.0.0' )
 
@@ -341,80 +337,19 @@ def table_init( dynamo_client, table_name ):
   )
   yield
 
-def test_addVisitor( dynamo_client, table_init, table_name, visitor ):
-  client = DynamoClient( table_name )
-  result = client.addVisitor( visitor )
-  assert 'visitor' in result.keys()
-  assert result['visitor'] == visitor
-
-def test_duplicate_addVisitor(
-  dynamo_client, table_init, table_name, visitor
-):
-  client = DynamoClient( table_name )
-  result = client.addVisitor( visitor )
-  result = client.addVisitor( visitor )
-  assert 'error' in result.keys()
-  assert result['error'] == f'Visitor already in table { visitor }'
-
-def test_parameter_addVisitor( dynamo_client, table_init, table_name ):
-  client = DynamoClient( table_name )
-  with pytest.raises( ValueError ) as e:
-    assert client.addVisitor( {} )
-  assert str( e.value ) == 'Must pass a Visitor object'
-
-def test_table_addVisitor( dynamo_client, table_init, visitor ):
-  client = DynamoClient( 'no name' )
-  result = client.addVisitor( visitor )
-  assert 'error' in result.keys()
-  assert result['error'] == 'Could not add new visitor to table'
-
-def test_removeVisitor( dynamo_client, table_init, table_name, visitor ):
-  client = DynamoClient( table_name )
-  client.addVisitor( visitor )
-  result = client.removeVisitor( visitor )
-  assert 'visitor' in result.keys()
-  assert result['visitor'] == visitor
-
-def test_none_removeVisitor( dynamo_client, table_init, table_name, visitor ):
-  client = DynamoClient( table_name )
-  result = client.removeVisitor( visitor )
-  assert 'error' in result.keys()
-  assert result['error'] == f'Visitor not in table { visitor }'
-
-def test_parameter_removeVisitor( dynamo_client, table_init, table_name ):
-  with pytest.raises( ValueError ) as e:
-    assert DynamoClient( table_name ).removeVisitor( {} )
-  assert str( e.value ) == 'Must pass a Visitor object'
-
-def test_incrementVisitorSessions(
-  dynamo_client, table_init, table_name, visitor
-):
-  client = DynamoClient( table_name )
-  client.addVisitor( visitor )
-  result = client.incrementVisitorSessions( visitor )
-  visitor.numberSessions += 1
-  assert 'visitor' in result.keys()
-  assert result['visitor'] == visitor
-
-def test_none_incrementVisitorSessions(
-  dynamo_client, table_init, table_name, visitor
-):
-  result = DynamoClient( table_name ).incrementVisitorSessions( visitor )
-  visitor.numberSessions += 1
-  assert 'error' in result.keys()
-  assert result['error'] == 'Visitor not in table'
-
-def test_parameter_incrementVisitorSessions(
-  dynamo_client, table_init, table_name
-):
-  with pytest.raises( ValueError ) as e:
-    assert  DynamoClient( table_name ).incrementVisitorSessions( {} )
-  assert str( e.value ) == 'Must pass a Visitor object'
+@pytest.fixture
+def table_del( dynamo_client, table_name ):
+  dynamo_client.delete_table( table_name )
 
 def test_addLocation( dynamo_client, table_init, table_name, location ):
   result = DynamoClient( table_name ).addLocation( location )
   assert 'location' in result.keys()
   assert result['location'] == location
+
+def test_table_addLocation( dynamo_client, table_name, location ):
+  result = DynamoClient( table_name ).addLocation( location )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Could not add new location to table'
 
 def test_duplicate_addLocation(
   dynamo_client, table_init, table_name, location
@@ -655,62 +590,12 @@ def test_getSessionDetails(
   assert result['session'].ip == visitor.ip
   assert result['session'].sessionStart == visits[0].date
 
-def test_addNewVisitor(
-  dynamo_client, table_init, table_name, visitor, browsers, visits, session,
-  location
+def test_table_getSessionDetails(
+  dynamo_client, table_name, visitor, browsers, visits, session
 ):
-  client = DynamoClient( table_name )
-  result = client.addNewVisitor(
-    visitor, location, browsers, visits
-  )
-  assert 'visitor' in result.keys()
-  assert result['visitor'] == visitor
-  assert 'browsers' in result.keys()
-  assert result['browsers'] == browsers
-  assert 'location' in result.keys()
-  assert result['location'] == location
-  assert 'visits' in result.keys()
-  assert result['visits'] == visits
-  assert 'session' in result.keys()
-  assert result['session'].ip == visitor.ip
-  assert result['session'].sessionStart == visits[0].date
-
-def test_getVisitorDetails(
-  dynamo_client, table_init, table_name, visitor, browsers, visits, session,
-  location
-):
-  client = DynamoClient( table_name )
-  client.addNewVisitor(
-    visitor, location, browsers, visits
-  )
-  result = client.getVisitorDetails( visitor )
-  assert 'visitor' in result.keys()
-  assert dict( result['visitor'] ) == dict( visitor )
-  assert 'browsers' in result.keys()
-  assert all( [
-    dict( result['browsers'][index] ) == dict( browsers[index] )
-    for index in range( len( browsers ) )
-  ] )
-  assert 'location' in result.keys()
-  assert dict( result['location'] ) == dict( location )
-  assert 'visits' in result.keys()
-  assert all( [
-    dict( result['visits'][index] ) == dict(visits[index])
-    for index in range( len( visits ) )
-  ] )
-  assert 'sessions' in result.keys()
-
-def test_parameter_getVisitorDetails( dynamo_client, table_init, table_name ):
-  with pytest.raises( ValueError ) as e:
-    assert DynamoClient( table_name ).getVisitorDetails( {} )
-  assert str( e.value ) == 'Must pass a Visitor object'
-
-def test_none_getVisitorDetails(
-  dynamo_client, table_init, table_name, visitor
-):
-  result = DynamoClient( table_name ).getVisitorDetails( visitor )
+  result = DynamoClient( table_name ).getSessionDetails( session )
   assert 'error' in result.keys()
-  assert result['error'] == 'Visitor not in table'
+  assert result['error'] == 'Could not get session from table'
 
 def test_updateSession(
   dynamo_client, table_init, table_name, visitor, browsers, visits, session,
@@ -727,6 +612,44 @@ def test_updateSession(
   ] )
   assert 'session' in result.keys()
   assert dict( result['session'] ) == dict( session )
+
+def test_parameter_session_type_updateSession(
+  dynamo_client, table_name, browsers, visits, session
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).updateSession( {}, visits )
+  assert str( e.value ) == 'Must pass a Session object'
+
+def test_parameter_visit_type_updateSession(
+  dynamo_client, table_name, browsers, visits, session
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).updateSession( session, {} )
+  assert str( e.value ) == 'Must pass a list of Visit objects'
+
+def test_parameter_visits_updateSession(
+  dynamo_client, table_name, browsers, visits, session
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).updateSession( session, visits + [5] )
+  assert str( e.value ) == 'List of visits must be of Visit type'
+
+def test_table_updateSession(
+  dynamo_client, table_name, browsers, visits, session
+):
+  result = DynamoClient( table_name ).updateSession( session, visits )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Could not update session in table'
+
+def test_none_updateSession(
+  dynamo_client, table_init, table_name, browsers, visits, session
+):
+  client = DynamoClient( table_name )
+  client.addBrowsers( browsers )
+  client.addVisits( visits )
+  result = client.updateSession( session, visits )
+  assert 'error' in result.keys()
+  assert result['error'] == f'Session not in table { session }'
 
 def test_addYear( dynamo_client, table_init, table_name, year_visits, year ):
   result = DynamoClient( table_name ).addYear( year_visits )

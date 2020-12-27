@@ -369,11 +369,9 @@ class DynamoClient( _Visitor, _Location ):
           data['visits'].append( itemToVisit( item ) )
         elif item['Type']['S'] == 'session':
           data['session'] = itemToSession( item )
-        else:
-          raise Exception( f'Could not parse type: { item }' )
       return data
     except ClientError as e:
-      print( f'ERROR getSession: { e }')
+      print( f'ERROR getSessionDetails: { e }')
       return { 'error': 'Could not get session from table' }
 
   def updateSession( self, session, visits ):
@@ -387,6 +385,14 @@ class DynamoClient( _Visitor, _Location ):
     visits : list[ Visit ]
       All of the visits that belong to the session.
     '''
+    if not isinstance( session, Session ):
+      raise ValueError( 'Must pass a Session object')
+    if not isinstance( visits, list ):
+      raise ValueError( 'Must pass a list of Visit objects' )
+    if not all( [
+      isinstance( visit, Visit ) for visit in visits
+    ] ):
+      raise ValueError( 'List of visits must be of Visit type' )
     pageTimes = [
       visit.timeOnPage for visit in visits
       if isinstance( visit.timeOnPage, float )
@@ -403,9 +409,7 @@ class DynamoClient( _Visitor, _Location ):
         Item = session.toItem(),
         ConditionExpression = 'attribute_exists(PK)'
       )
-      result = self.addVisits( visits )
-      if 'error' in result.keys():
-        return { 'error': result['error'] }
+      self.addVisits( visits )
       return { 'session': session, 'visits': visits }
     except ClientError as e:
       print( f'ERROR updateSession: { e }' )
