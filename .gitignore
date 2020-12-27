@@ -1,6 +1,9 @@
 # Mac stuff
 .DS_Store
 
+# VS Code stuff
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
