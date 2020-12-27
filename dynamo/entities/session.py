@@ -54,8 +54,8 @@ class Session:
         sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ'
       )
     self.ip = ip
-    self.avgTime = avgTime
-    self.totalTime = totalTime
+    self.avgTime = float( avgTime )
+    self.totalTime = float( totalTime )
 
   def key( self ):
     '''Returns the Primary Key of the session.

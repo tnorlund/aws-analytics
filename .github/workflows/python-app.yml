@@ -26,4 +26,4 @@ jobs:
         python -m pip install -e ".[testing]"
     - name: Test with pytest
       run: |
-        pytest
+        pytest --pylint --pylint-rcfile=.pylintrc

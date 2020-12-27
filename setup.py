@@ -21,5 +21,5 @@ setuptools.setup(
   ],
   python_requires='>=3.6',
   install_requires=[ 'numpy', 'pandas', 'boto3', 'botocore' ],
-  extras_require={ 'testing': [ 'pytest', 'moto' ] },
+  extras_require={ 'testing': [ 'pytest', 'moto', 'pytest-pylint' ] },
 )

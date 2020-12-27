@@ -34,7 +34,7 @@ def visit():
 
 @pytest.fixture
 def session():
-  return Session( '2020-01-01T00:00:00.000Z', '0.0.0.0', 60, 60 )
+  return Session( '2020-01-01T00:00:00.000Z', '0.0.0.0', 60.0, 60.0 )
 
 @pytest.fixture
 def visits():
@@ -44,7 +44,7 @@ def visits():
       '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-01T00:00:01.000Z', '0.0.0.0', '0', 'Blog', '/blog',
+      '2020-01-01T00:01:00.000Z', '0.0.0.0', '0', 'Blog', '/blog',
       '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     )
   ]
@@ -108,14 +108,6 @@ def table_init( dynamo_client, table_name ):
     ]
   )
   yield
-
-def test_none_getSessionDetails(
-  dynamo_client, table_init, table_name, session
-):
-  client = DynamoClient( table_name )
-  result = client.getSessionDetails( session )
-  assert 'error' in result.keys()
-  assert result['error'] == 'Session not in table'
 
 def test_addVisitor( dynamo_client, table_init, table_name, visitor ):
   client = DynamoClient( table_name )
@@ -392,14 +384,41 @@ def test_addNewSession(
   assert 'visits' in result.keys()
   assert result['visits'] == visits
   assert 'session' in result.keys()
+  assert result['session'].ip == visitor.ip
+  assert result['session'].sessionStart == visits[0].date
 
 def test_visitor_addNewSession(
   dynamo_client, table_init, table_name, visitor, browser, visits
 ):
   client = DynamoClient( table_name )
-  # client.addVisitor( visitor )
   result = client.addNewSession(
     visitor, [browser] * 2, visits
   )
   assert 'error' in result.keys()
   assert result['error'] == 'Visitor not in table'
+
+def test_none_getSessionDetails(
+  dynamo_client, table_init, table_name, session
+):
+  client = DynamoClient( table_name )
+  result = client.getSessionDetails( session )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Session not in table'
+
+def test_getSessionDetails(
+  dynamo_client, table_init, table_name, visitor, browser, visits, session
+):
+  client = DynamoClient( table_name )
+  client.addVisitor( visitor )
+  client.addNewSession(
+    visitor, [browser] * 2, visits
+  )
+  result = client.getSessionDetails( session )
+  assert 'visits' in result.keys()
+  assert all ([
+    dict( result['visits'][index] ) == dict(visits[index])
+    for index in range( len( visits ) )
+  ] )
+  assert 'session' in result.keys()
+  assert result['session'].ip == visitor.ip
+  assert result['session'].sessionStart == visits[0].date
