@@ -10,7 +10,7 @@ def processDF( df, ip ):
     The raw dataframe from the original '.parquet' file.
   ip : str
     The IP address of the requested visitor.
-  
+
   Returns
   -------
   v_df : pd.DataFrame
