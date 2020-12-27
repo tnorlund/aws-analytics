@@ -146,6 +146,17 @@ class Month:
   def __repr__( self ):
     return f'{ self.title } - { self.year }/{ str( self.month ).zfill( 2 ) }'
 
+  def __iter__( self ):
+    yield 'slug', self.slug
+    yield 'title', self.title
+    yield 'year', self.year
+    yield 'month', self.month
+    yield 'numberVisitors', self.numberVisitors
+    yield 'averageTime', self.averageTime
+    yield 'percentChurn', self.percentChurn
+    yield 'fromPage', self.fromPage
+    yield 'toPage', self.toPage
+
 def itemToMonth( item ):
   '''Parses a DynamoDB item as a month object.
 

@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from dynamo.entities import Session, Visit, Visitor, Location, Browser # pylint: disable=wrong-import-position
-from dynamo.entities import Year # pylint: disable=wrong-import-position
+from dynamo.entities import Year, Month # pylint: disable=wrong-import-position
 from dynamo.data import DynamoClient # pylint: disable=wrong-import-position
 
 @pytest.fixture
@@ -70,6 +70,27 @@ def year_visits():
 ]
 
 @pytest.fixture
+def month_visits():
+  return [
+    Visit(
+      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+    ),
+    Visit(
+      '2020-01-01T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    ),
+    Visit(
+      '2020-01-01T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    ),
+    Visit(
+      '2020-01-01T00:00:00.000Z', '0.0.0.2', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    )
+  ]
+
+@pytest.fixture
 def browser():
   return Browser(
     'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
@@ -107,6 +128,34 @@ def year( year_visits ):
     len( { visit.ip for visit in year_visits } ),
     np.mean( [
         visit.timeOnPage for visit in year_visits
+        if visit.timeOnPage is not None
+    ] ),
+    toPages.count( None ) / len( toPages ),
+    {
+      (
+        'www' if page is None else page
+      ): fromPages.count( page ) / len( fromPages )
+      for page in list( set( fromPages ) )
+    },
+    {
+      (
+        'www' if page is None else page
+      ): toPages.count( page ) / len( toPages )
+      for page in list( set( toPages ) )
+    }
+  )
+
+@pytest.fixture
+def month( month_visits ):
+  toPages = [ visit.nextSlug for visit in month_visits ]
+  fromPages = [ visit.prevSlug for visit in month_visits ]
+  return Month(
+    month_visits[0].slug,
+    month_visits[0].title,
+    month_visits[0].date.strftime( '%Y-%m' ),
+    len( { visit.ip for visit in month_visits } ),
+    np.mean( [
+        visit.timeOnPage for visit in month_visits
         if visit.timeOnPage is not None
     ] ),
     toPages.count( None ) / len( toPages ),
@@ -578,3 +627,68 @@ def test_parameter_slug_addYear(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addYear( year_visits + visits )
   assert str( e.value ) == 'List of visits must have the same slug'
+
+def test_parameter_title_addYear(
+  dynamo_client, table_init, table_name, year_visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addYear( year_visits + [
+      Visit(
+        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '2020-12-23T20:32:26.000Z'
+      )
+    ] )
+  assert str( e.value ) == 'List of visits must have the same title'
+
+def test_parameter_year_addYear(
+  dynamo_client, table_init, table_name, year_visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addYear( year_visits + [
+      Visit(
+        '2021-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+        '2020-12-23T20:32:26.000Z'
+      )
+    ] )
+  assert str( e.value ) == 'List of visits must be from the same year'
+
+def test_addMonth( dynamo_client, table_init, table_name, month_visits, month ):
+  result = DynamoClient( table_name ).addMonth( month_visits )
+  assert 'month' in result.keys()
+  assert dict( result['month'] ) == dict( month )
+
+def test_parameter_list_addMonth( dynamo_client, table_init, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addMonth( {} )
+  assert str( e.value ) == 'Must pass a list'
+
+def test_parameter_slug_addMonth(
+  dynamo_client, table_init, table_name, month_visits, visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addMonth( month_visits + visits )
+  assert str( e.value ) == 'List of visits must have the same slug'
+
+def test_parameter_title_addMonth(
+  dynamo_client, table_init, table_name, month_visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addMonth( month_visits + [
+      Visit(
+        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '2020-12-23T20:32:26.000Z'
+      )
+    ] )
+  assert str( e.value ) == 'List of visits must have the same title'
+
+def test_parameter_year_addMonth(
+  dynamo_client, table_init, table_name, month_visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addMonth( month_visits + [
+      Visit(
+        '2021-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+        '2020-12-23T20:32:26.000Z'
+      )
+    ] )
+  assert str( e.value ) == 'List of visits must be from the same year and month'
