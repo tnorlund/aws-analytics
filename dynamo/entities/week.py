@@ -146,6 +146,17 @@ class Week:
   def __repr__( self ):
     return f'{ self.title } - { self.year }/{ str( self.week ).zfill( 2 ) }'
 
+  def __iter__( self ):
+    yield 'slug', self.slug
+    yield 'title', self.title
+    yield 'year', self.year
+    yield 'week', self.week
+    yield 'numberVisitors', self.numberVisitors
+    yield 'averageTime', self.averageTime
+    yield 'percentChurn', self.percentChurn
+    yield 'fromPage', self.fromPage
+    yield 'toPage', self.toPage
+
 def itemToWeek( item ):
   '''Parses a DynamoDB item as a week object.
 

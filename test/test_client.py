@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from dynamo.entities import Session, Visit, Visitor, Location, Browser # pylint: disable=wrong-import-position
-from dynamo.entities import Year, Month # pylint: disable=wrong-import-position
+from dynamo.entities import Year, Month, Week # pylint: disable=wrong-import-position
 from dynamo.data import DynamoClient # pylint: disable=wrong-import-position
 
 @pytest.fixture
@@ -77,17 +77,34 @@ def month_visits():
       '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-01T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '2020-01-01T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-25T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     ),
     Visit(
-      '2020-01-01T00:00:00.000Z', '0.0.0.2', '0', 'Tyler Norlund', '/',
+      '2020-01-30T00:00:00.000Z', '0.0.0.2', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     )
+  ]
+
+@pytest.fixture
+def week_visits():
+  return [
+    Visit(
+      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+    ),
+    Visit(
+      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    ),
+    Visit(
+      '2020-01-04T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    ),
   ]
 
 @pytest.fixture
@@ -156,6 +173,34 @@ def month( month_visits ):
     len( { visit.ip for visit in month_visits } ),
     np.mean( [
         visit.timeOnPage for visit in month_visits
+        if visit.timeOnPage is not None
+    ] ),
+    toPages.count( None ) / len( toPages ),
+    {
+      (
+        'www' if page is None else page
+      ): fromPages.count( page ) / len( fromPages )
+      for page in list( set( fromPages ) )
+    },
+    {
+      (
+        'www' if page is None else page
+      ): toPages.count( page ) / len( toPages )
+      for page in list( set( toPages ) )
+    }
+  )
+
+@pytest.fixture
+def week( week_visits ):
+  toPages = [ visit.nextSlug for visit in week_visits ]
+  fromPages = [ visit.prevSlug for visit in week_visits ]
+  return Week(
+    week_visits[0].slug,
+    week_visits[0].title,
+    week_visits[0].date.strftime( '%Y-%U' ),
+    len( { visit.ip for visit in week_visits } ),
+    np.mean( [
+        visit.timeOnPage for visit in week_visits
         if visit.timeOnPage is not None
     ] ),
     toPages.count( None ) / len( toPages ),
@@ -692,3 +737,44 @@ def test_parameter_year_addMonth(
       )
     ] )
   assert str( e.value ) == 'List of visits must be from the same year and month'
+
+def test_addWeek( dynamo_client, table_init, table_name, week_visits, week ):
+  result = DynamoClient( table_name ).addWeek( week_visits )
+  assert 'week' in result.keys()
+  assert dict( result['week'] ) == dict( week )
+
+def test_parameter_list_addWeek( dynamo_client, table_init, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addWeek( {} )
+  assert str( e.value ) == 'Must pass a list'
+
+def test_parameter_slug_addWeek(
+  dynamo_client, table_init, table_name, week_visits, visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addWeek( week_visits + visits )
+  assert str( e.value ) == 'List of visits must have the same slug'
+
+def test_parameter_title_addWeek(
+  dynamo_client, table_init, table_name, week_visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addWeek( week_visits + [
+      Visit(
+        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '2020-12-23T20:32:26.000Z'
+      )
+    ] )
+  assert str( e.value ) == 'List of visits must have the same title'
+
+def test_parameter_year_addWeek(
+  dynamo_client, table_init, table_name, week_visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addWeek( week_visits + [
+      Visit(
+        '2021-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+        '2020-12-23T20:32:26.000Z'
+      )
+    ] )
+  assert str( e.value ) == 'List of visits must be from the same year and week'
