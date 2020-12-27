@@ -89,7 +89,7 @@ def test_toItem():
     'PostalCode': { 'S': '91361' },
     'TimeZone': { 'S': '-08:00' },
     'Domains': { 'SS': ['cpe-75-82-84-171.socal.res.rr.com'] },
-    'AutonomousSystem': { 
+    'AutonomousSystem': {
       'M': {
         'asn': { 'N': '20001' },
         'name': { 'S': 'Charter Communications (20001)' },
@@ -103,7 +103,7 @@ def test_toItem():
     'VPN': { 'BOOL': False },
     'TOR': { 'BOOL': False },
     'DateAdded': { 'S': currentTime.strftime( '%Y-%m-%dT%H:%M:%S.' ) \
-      + currentTime.strftime('%f')[:3] + 'Z' } 
+      + currentTime.strftime('%f')[:3] + 'Z' }
   }
 
 def test_repr():

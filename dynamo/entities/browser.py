@@ -83,10 +83,17 @@ class Browser:
     self.ip = ip
     self.width = int( width )
     self.height = int( height )
-    self.dateVisited = datetime.datetime.strptime(
-      dateVisited, '%Y-%m-%dT%H:%M:%S.%fZ'
-    )
-    self.dateAdded = dateAdded
+    self.dateVisited = dateVisited \
+      if isinstance( dateVisited, datetime.datetime ) \
+      else datetime.datetime.strptime(
+        dateVisited, '%Y-%m-%dT%H:%M:%S.%fZ'
+      )
+    self.dateAdded = dateAdded \
+      if isinstance( dateAdded, datetime.datetime ) \
+      else datetime.datetime.strptime(
+        dateAdded, '%Y-%m-%dT%H:%M:%S.%fZ'
+      )
+    # self.dateAdded = dateAdded
     matched = self._matchMac()
     if not matched:
       matched = self._matchWindows()
@@ -112,7 +119,7 @@ class Browser:
     '''
     return( {
       'PK': { 'S': f'VISITOR#{ self.ip }' },
-      'SK': { 'S': f'VISIT#{ formatDate( self.dateVisited ) }' }
+      'SK': { 'S': f'BROWSER#{ formatDate( self.dateVisited ) }' }
     } )
 
   def pk( self ):
@@ -279,9 +286,7 @@ def itemToBrowser( item ):
       None if 'NULL' in item['OS'].keys() else item['OS']['S'],
       None if 'NULL' in item['Webkit'].keys() else item['Webkit']['S'],
       None if 'NULL' in item['Version'].keys() else item['Version']['S'],
-      datetime.datetime.strptime(
-        item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
-      )
+      item['DateAdded']['S']
     )
   except Exception as e:
     print( f'ERROR itemToBrowser: { e }' )
