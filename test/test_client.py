@@ -1,6 +1,8 @@
 # pylint: disable=redefined-outer-name, unused-argument
 import pytest
+import numpy as np
 from dynamo.entities import Session, Visit, Visitor, Location, Browser # pylint: disable=wrong-import-position
+from dynamo.entities import Year # pylint: disable=wrong-import-position
 from dynamo.data import DynamoClient # pylint: disable=wrong-import-position
 
 @pytest.fixture
@@ -51,6 +53,23 @@ def visits():
   ]
 
 @pytest.fixture
+def year_visits():
+  return [
+    Visit(
+      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+    ),
+    Visit(
+      '2020-01-01T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    ),
+    Visit(
+      '2020-01-01T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    )
+]
+
+@pytest.fixture
 def browser():
   return Browser(
     'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
@@ -76,6 +95,34 @@ def browsers():
       dateAdded = '2020-01-01T00:00:00.000Z'
     )
   ]
+
+@pytest.fixture
+def year( year_visits ):
+  toPages = [ visit.nextSlug for visit in year_visits ]
+  fromPages = [ visit.prevSlug for visit in year_visits ]
+  return Year(
+    year_visits[0].slug,
+    year_visits[0].title,
+    year_visits[0].date.strftime( '%Y' ),
+    len( { visit.ip for visit in year_visits } ),
+    np.mean( [
+        visit.timeOnPage for visit in year_visits
+        if visit.timeOnPage is not None
+    ] ),
+    toPages.count( None ) / len( toPages ),
+    {
+      (
+        'www' if page is None else page
+      ): fromPages.count( page ) / len( fromPages )
+      for page in list( set( fromPages ) )
+    },
+    {
+      (
+        'www' if page is None else page
+      ): toPages.count( page ) / len( toPages )
+      for page in list( set( toPages ) )
+    }
+  )
 
 @pytest.fixture
 def table_init( dynamo_client, table_name ):
@@ -487,6 +534,18 @@ def test_getVisitorDetails(
   ] )
   assert 'sessions' in result.keys()
 
+def test_parameter_getVisitorDetails( dynamo_client, table_init, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).getVisitorDetails( {} )
+  assert str( e.value ) == 'Must pass a Visitor object'
+
+def test_none_getVisitorDetails(
+  dynamo_client, table_init, table_name, visitor
+):
+  result = DynamoClient( table_name ).getVisitorDetails( visitor )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Visitor not in table'
+
 def test_updateSession(
   dynamo_client, table_init, table_name, visitor, browsers, visits, session,
   location
@@ -502,3 +561,20 @@ def test_updateSession(
   ] )
   assert 'session' in result.keys()
   assert dict( result['session'] ) == dict( session )
+
+def test_addYear( dynamo_client, table_init, table_name, year_visits, year ):
+  result = DynamoClient( table_name ).addYear( year_visits )
+  assert 'year' in result.keys()
+  assert dict( result['year'] ) == dict( year )
+
+def test_parameter_list_addYear( dynamo_client, table_init, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addYear( {} )
+  assert str( e.value ) == 'Must pass a list'
+
+def test_parameter_slug_addYear(
+  dynamo_client, table_init, table_name, year_visits, visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addYear( year_visits + visits )
+  assert str( e.value ) == 'List of visits must have the same slug'

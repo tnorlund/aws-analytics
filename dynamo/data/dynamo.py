@@ -6,11 +6,43 @@ from botocore.exceptions import ClientError
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.entities import Visit, Visitor, Location, Session, Browser # pylint: disable=wrong-import-position
-from dynamo.entities import itemToVisit, itemToSession, itemToVisitor # pylint: disable=wrong-import-position
-from dynamo.entities import itemToLocation, itemToBrowser # pylint: disable=wrong-import-position
+from dynamo.data._visitor import _Visitor # pylint: disable=wrong-import-position
+from dynamo.data._location import _Location # pylint: disable=wrong-import-position
+from dynamo.entities import Visit, Session, Browser # pylint: disable=wrong-import-position
+from dynamo.entities import Year, Month, Week, Day, Page # pylint: disable=wrong-import-position
+from dynamo.entities import itemToVisit, itemToSession # pylint: disable=wrong-import-position
 
-class DynamoClient:
+def _pagesToDict( pages ):
+  '''Converts a list of pages to a dict of ratios.
+
+  Parameters
+  ----------
+  pages : list[ str ]
+    The list of page visits from other pages or to other pages.
+
+  Returns
+  -------
+  result : dict
+    The ratios of the page visits where the keys are the page slugs and the
+    values are the ratios relative to the list of page visits.
+  '''
+  return {
+    (
+      'www' if page is None else page
+    ): pages.count( page ) / len( pages )
+    for page in list( set( pages ) )
+  }
+
+class DynamoClient( _Visitor, _Location ):
+  '''A class to represent the DynamoDB client.
+
+  Attributes
+  ----------
+  client : boto3.client
+    The boto3 DynamoDB client used to access the table.
+  tableName : str
+    The name of the DynamoDB table.
+  '''
   def __init__( self, tableName, regionName='us-east-1' ):
     '''Constructs the necessary attributes for the DynamoDB client object.
 
@@ -23,255 +55,6 @@ class DynamoClient:
     '''
     self.client = boto3.client( 'dynamodb', region_name = regionName )
     self.tableName = tableName
-
-  def addVisitor( self, visitor ):
-    '''Adds a visitor to the table.
-
-    Parameters
-    ----------
-    visitor : Visitor
-      The visitor to be added to the table.
-
-    Returns
-    -------
-    result : dict
-      The result of adding the the visitor to the table.
-    '''
-    if not isinstance( visitor, Visitor ):
-      raise ValueError( 'Must pass a Visitor object' )
-    try:
-      self.client.put_item(
-        TableName = self.tableName,
-        Item = visitor.toItem(),
-        ConditionExpression = 'attribute_not_exists(PK)'
-      )
-      return { 'visitor': visitor }
-    except ClientError as e:
-      print( f'ERROR addVisitor: { e }' )
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return { 'error': f'Visitor already in table { visitor }' }
-      return { 'error': 'Could not add new visitor to table' }
-
-  def addNewVisitor( self, visitor, location, browsers, visits ):
-    '''Adds a new visitor and their details the the table.
-
-    Parameters
-    ----------
-    visitor : Visitor
-      The visitor to be added to the table.
-    location : Location
-      The visitor's location to be added to the table.
-    browsers : list[ Browser ]
-      The visitor's browsers to be added to the table.
-    visits : list[ Visit ]
-      The visits to be added to the table.
-
-    Returns
-    -------
-    result : dict
-      The result of adding the visitor and their attributes to the table.
-    '''
-    result = self.addVisitor( visitor )
-    if 'error' in result.keys():
-      return { 'error': result['error'] }
-    result = self.addLocation( location )
-    if 'error' in result.keys():
-      return { 'error': result['error'] }
-    result = self.addBrowsers( browsers )
-    if 'error' in result.keys():
-      return { 'error': result['error'] }
-    pageTimes = [
-      visit.timeOnPage for visit in visits
-      if isinstance( visit.timeOnPage, float )
-    ]
-    session = Session(
-      visits[0].date,
-      visits[0].ip,
-      np.mean( pageTimes ) if len( pageTimes ) > 1 else pageTimes[0],
-      ( visits[-1].date - visits[0].date ).total_seconds()
-    )
-    result = self.addSession( session )
-    if 'error' in result.keys():
-      return { 'error': result['error'] }
-    result = self.addVisits( visits )
-    if 'error' in result.keys():
-      return { 'error': result['error'] }
-    return {
-      'visitor': visitor, 'location': location, 'browsers': browsers,
-      'visits': visits, 'session': session
-    }
-
-  def removeVisitor( self, visitor ):
-    '''Removes a visitor from the table.
-
-    Parameters
-    ----------
-    visitor : Visitor
-      The visitor to be removed from the table.
-
-    Returns
-    -------
-    result : dict
-      The result of removing the visitor from the table.
-    '''
-    if not isinstance( visitor, Visitor ):
-      raise ValueError( 'Must pass a Visitor object' )
-    try:
-      self.client.delete_item(
-        TableName = self.tableName,
-        Key = visitor.key(),
-        ConditionExpression = 'attribute_exists(PK)'
-      )
-      return { 'visitor': visitor }
-    except ClientError as e:
-      print( f'ERROR removeVisitor: { e }' )
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return { 'error': f'Visitor not in table { visitor }' }
-      return { 'error': 'Could not remove visitor from table' }
-
-  def incrementVisitorSessions( self, visitor ):
-    '''Increments the number of sessions a visitor has.
-
-    Parameters
-    ----------
-    visitor : Visitor
-      The visitor to have their number of sessions incremented.
-
-    Returns
-    -------
-    result : dict
-      The result of incrementing the number of sessions the visitor has. This
-      could be either an error or the updated visitor.
-    '''
-    if not isinstance( visitor, Visitor ):
-      raise ValueError( 'Must pass a Visitor object' )
-    try:
-      result = self.client.update_item(
-        TableName = self.tableName,
-        Key = visitor.key(),
-        ConditionExpression = 'attribute_exists(PK)',
-        UpdateExpression= 'SET #count = #count + :inc',
-        ExpressionAttributeNames = { '#count': 'NumberSessions' },
-        ExpressionAttributeValues= { ':inc': { 'N': '1' } },
-        ReturnValues= 'ALL_NEW'
-      )
-      visitor.numberSessions = int(
-        result['Attributes']['NumberSessions']['N']
-      )
-      return { 'visitor': visitor }
-    except ClientError as e:
-      print( f'ERROR incrementSessions: { e }' )
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return { 'error': 'Visitor not in table' }
-      return {
-        'error': 'Could not increment the number of sessions of visitor'
-      }
-
-  def getVisitorDetails( self, visitor ):
-    '''Gets the visitor and their details from the table.
-
-    Parameters
-    ----------
-    visitor : Visitor
-      The visitor to request from the table.
-
-    Returns
-    -------
-    result : dict
-      The result of requesting the visitor from the table. This contains either
-      the error that occurred or the visitor's details.
-    '''
-    try:
-      result = self.client.query(
-        TableName = self.tableName,
-        KeyConditionExpression = '#pk = :pk',
-        ExpressionAttributeNames = { '#pk': 'PK' },
-        ExpressionAttributeValues = { ':pk': visitor.pk() },
-        ScanIndexForward = True
-      )
-      if len( result['Items'] ) == 0:
-        return { 'error': 'Visitor not in table' }
-      data = { 'visits': [], 'browsers': [], 'sessions': [] }
-      for item in result['Items']:
-        if item['Type']['S'] == 'visitor':
-          data['visitor'] = itemToVisitor( item )
-        elif item['Type']['S'] == 'visit':
-          data['visits'].append( itemToVisit( item ) )
-        elif item['Type']['S'] == 'session':
-          data['sessions'].append( itemToSession( item ) )
-        elif item['Type']['S'] == 'location':
-          data['location'] = itemToLocation( item )
-        elif item['Type']['S'] == 'browser':
-          data['browsers'].append( itemToBrowser( item ) )
-        else:
-          raise Exception(
-            f'''Could not parse type: { item }'''
-          )
-      return data
-    except KeyError as e:
-      print( f'ERROR getVisitorDetails: {e}')
-      return { 'error': 'Could not get visitor from table' }
-    except ClientError as e:
-      print( f'ERROR getVisitorDetails: { e }')
-      return { 'error': 'Could not get visitor from table' }
-
-  def addLocation( self, location ):
-    '''Adds the visitor's location to the table.
-
-    Parameters
-    ----------
-    location : Location
-      The visitor's location to be added to the table.
-
-    Returns
-    -------
-    result : dict
-      The result of adding the visitor's location to the table.
-    '''
-    if not isinstance( location, Location ):
-      raise ValueError( 'Must pass a Location object' )
-    try:
-      self.client.put_item(
-        TableName = self.tableName,
-        Item = location.toItem(),
-        ConditionExpression = 'attribute_not_exists(PK)'
-      )
-      return { 'location': location }
-    except ClientError as e:
-      print( f'ERROR addLocation: { e }')
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return {
-          'error': f'Visitor\'s location is already in table { location }'
-        }
-      return { 'error': 'Could not add new location to table' }
-
-  def removeLocation( self, location ):
-    '''Removes a location from the table.
-
-    Parameters
-    ----------
-    location : Location
-      The location to be removed from the table.
-
-    Returns
-    -------
-    result : dict
-      The result of removing the location from the table.
-    '''
-    if not isinstance( location, Location ):
-      raise ValueError( 'Must pass a Location object' )
-    try:
-      self.client.delete_item(
-        TableName = self.tableName,
-        Key = location.key(),
-        ConditionExpression = 'attribute_exists(PK)'
-      )
-      return { 'location': location }
-    except ClientError as e:
-      print( f'ERROR removeLocation: { e }' )
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return { 'error': f'Location not in table { location }' }
-      return { 'error': 'Could not remove location from table' }
 
   def addVisit( self, visit ):
     '''Adds a visitor's page visit to the table.
@@ -629,3 +412,242 @@ class DynamoClient:
       if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
         return { 'error': f'Session not in table { session }' }
       return { 'error': 'Could not update session in table' }
+
+  def addYear( self, visits ):
+    '''Adds a year item to the table.
+
+    Parameters
+    ----------
+    visits : list[ Visit ]
+      The list of visits from a specific year for the specific page.
+
+    Returns
+    -------
+    result : dict
+      The result of adding the year to the table. This could be the error that
+      occurs or the year object added to the table.
+    '''
+    if not isinstance( visits, list ):
+      raise ValueError( 'Must pass a list' )
+    if len( {visit.slug for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same slug' )
+    if len( {visit.title for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same title' )
+    if len( {visit.date.strftime( '%Y' ) for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must be from the same year' )
+    # Find all the pages visited before and after this one.
+    toPages = [ visit.nextSlug for visit in visits ]
+    fromPages = [ visit.prevSlug for visit in visits ]
+    try:
+      # Create the week object
+      year = Year(
+        visits[0].slug,
+        visits[0].title,
+        visits[0].date.strftime( '%Y' ),
+        len( { visit.ip for visit in visits } ),
+        np.mean( [
+          visit.timeOnPage for visit in visits
+          if visit.timeOnPage is not None
+        ] ),
+        toPages.count( None ) / len( toPages ),
+        _pagesToDict( fromPages ),
+        _pagesToDict( toPages )
+      )
+      # Add the year to the table
+      self.client.put_item( TableName = self.tableName, Item = year.toItem() )
+      # Return the year added to the table
+      return { 'year': year }
+    except ClientError as e:
+      print( f'ERROR addYear: { e }' )
+      return { 'error': 'Could not add new year to table' }
+
+  def addMonth( self, visits ):
+    '''Adds a month item to the table.
+
+    Parameters
+    ----------
+    visits : list[ Visit ]
+      The list of visits from a specific month for the specific page.
+
+    Returns
+    -------
+    result : dict
+      The result of adding the month to the table. This could be the error that
+      occurs or the month object added to the table.
+    '''
+    if not isinstance( visits, list ):
+      raise ValueError( 'Must pass a list' )
+    if len( {visit.slug for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same slug' )
+    if len( {visit.title for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same title' )
+    if len( {visit.date.strftime( '%Y-%m' ) for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must be from the same year and month' )
+    # Find all the pages visited before and after this one.
+    toPages = [ visit.nextSlug for visit in visits ]
+    fromPages = [ visit.prevSlug for visit in visits ]
+    try:
+      # Create the week object
+      month = Month(
+        visits[0].slug,
+        visits[0].title,
+        visits[0].date.strftime( '%Y-%m' ),
+        len( { visit.ip for visit in visits } ),
+        np.mean( [
+            visit.timeOnPage for visit in visits
+            if visit.timeOnPage is not None
+        ] ),
+        toPages.count( None ) / len( toPages ),
+        _pagesToDict( fromPages ),
+        _pagesToDict( toPages )
+      )
+      # Add the month to the table
+      self.client.put_item( TableName = self.tableName, Item = month.toItem() )
+      # Return the month added to the table
+      return { 'month': month }
+    except ClientError as e:
+      print( f'ERROR addMonth: { e }' )
+      return { 'error': 'Could not add new month to table' }
+
+  def addWeek( self, visits ):
+    '''Adds a week item to the table.
+
+    Parameters
+    ----------
+    visits : list[ Visit ]
+      The list of visits from a specific week for the specific page.
+
+    Returns
+    -------
+    result : dict
+      The result of adding the week to the table. This could be the error that
+      occurs or the week object added to the table.
+    '''
+    if not isinstance( visits, list ):
+      raise ValueError( 'Must pass a list' )
+    if len( {visit.slug for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same slug' )
+    if len( {visit.title for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same title' )
+    if len( {visit.date.strftime( '%Y-%U' ) for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must be from the same year and week' )
+    # Find all the pages visited before and after this one.
+    toPages = [ visit.nextSlug for visit in visits ]
+    fromPages = [ visit.prevSlug for visit in visits ]
+    try:
+      # Create the week object
+      week = Week(
+        visits[0].slug,
+        visits[0].title,
+        visits[0].date.strftime( '%Y-%U' ),
+        len( { visit.ip for visit in visits } ),
+        np.mean( [
+            visit.timeOnPage for visit in visits
+            if visit.timeOnPage is not None
+        ] ),
+        toPages.count( None ) / len( toPages ),
+        _pagesToDict( fromPages ),
+        _pagesToDict( toPages )
+      )
+      # Add the week to the table
+      self.client.put_item( TableName = self.tableName, Item = week.toItem() )
+      # Return the week added to the table
+      return { 'week': week }
+    except ClientError as e:
+      print( f'ERROR addWeek: { e }' )
+      return { 'error': 'Could not add new week to table' }
+
+  def addDay( self, visits ):
+    '''Adds a day item to the table.
+
+    Parameters
+    ----------
+    visits : list[ Visit ]
+      The list of visits from a specific day for the specific page.
+
+    Returns
+    -------
+    result : dict
+      The result of adding the day to the table. This could be the error that
+      occurs or the day object added to the table.
+    '''
+    if not isinstance( visits, list ):
+      raise ValueError( 'Must pass a list' )
+    if len( {visit.slug for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same slug' )
+    if len( {visit.title for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same title' )
+    if len( {visit.date.strftime( '%Y-%m-%d' ) for visit in visits } ) != 1:
+      raise ValueError(
+        'List of visits must be from the same year, month, and day'
+      )
+    # Find all the pages visited before and after this one.
+    toPages = [ visit.nextSlug for visit in visits ]
+    fromPages = [ visit.prevSlug for visit in visits ]
+    try:
+      # Create the day object.
+      day = Day(
+        visits[0].slug,
+        visits[0].title,
+        visits[0].date.strftime( '%Y-%m-%d' ),
+        len( { visit.ip for visit in visits } ),
+        np.mean( [
+            visit.timeOnPage for visit in visits
+            if visit.timeOnPage is not None
+        ] ),
+        toPages.count( None ) / len( toPages ),
+        _pagesToDict( fromPages ),
+        _pagesToDict( toPages )
+      )
+      # Add the day to the table
+      self.client.put_item( TableName = self.tableName, Item = day.toItem() )
+      # Return the day added to the table
+      return { 'day': day }
+    except ClientError as e:
+      print( f'ERROR addDay: { e }')
+      return { 'error': 'Could not add new day to table' }
+
+  def addPage( self, visits ):
+    '''Adds the page item to the table.
+
+    Parameters
+    ----------
+    visits : list[ Visit ]
+      The list of all visits for the specific page.
+
+    Returns
+    -------
+    result : dict
+      The result of adding the page to the table. This could be the error that
+      occurs or the page object added to the table.
+    '''
+    if not isinstance( visits, list ):
+      raise ValueError( 'Must pass a list' )
+    if len( {visit.slug for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same slug' )
+    if len( {visit.title for visit in visits } ) != 1:
+      raise ValueError( 'List of visits must have the same title' )
+    # Find all the pages visited before and after this one.
+    toPages = [ visit.nextSlug for visit in visits ]
+    fromPages = [ visit.prevSlug for visit in visits ]
+    try:
+      # Create the page object.
+      page = Page(
+        visits[0].slug,
+        visits[0].title,
+        len( { visit.ip for visit in visits } ),
+        np.mean( [
+            visit.timeOnPage for visit in visits
+            if visit.timeOnPage is not None
+        ] ),
+        toPages.count( None ) / len( toPages ),
+        _pagesToDict( fromPages ),
+        _pagesToDict( toPages )
+      )
+      # Add the page to the table
+      self.client.put_item( TableName = self.tableName, Item = page.toItem() )
+      # Return the page added to the table
+      return { 'page': page }
+    except ClientError as e:
+      print( f'ERROR addPage: { e }')
+      return { 'error': 'Could not add new page to table' }
