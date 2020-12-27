@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from dynamo.entities import Session, Visit, Visitor, Location, Browser # pylint: disable=wrong-import-position
-from dynamo.entities import Year, Month, Week # pylint: disable=wrong-import-position
+from dynamo.entities import Year, Month, Week, Day, Page # pylint: disable=wrong-import-position
 from dynamo.data import DynamoClient # pylint: disable=wrong-import-position
 
 @pytest.fixture
@@ -108,6 +108,23 @@ def week_visits():
   ]
 
 @pytest.fixture
+def day_visits():
+  return [
+    Visit(
+      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+    ),
+    Visit(
+      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    ),
+    Visit(
+      '2020-01-03T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    ),
+  ]
+
+@pytest.fixture
 def browser():
   return Browser(
     'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
@@ -201,6 +218,61 @@ def week( week_visits ):
     len( { visit.ip for visit in week_visits } ),
     np.mean( [
         visit.timeOnPage for visit in week_visits
+        if visit.timeOnPage is not None
+    ] ),
+    toPages.count( None ) / len( toPages ),
+    {
+      (
+        'www' if page is None else page
+      ): fromPages.count( page ) / len( fromPages )
+      for page in list( set( fromPages ) )
+    },
+    {
+      (
+        'www' if page is None else page
+      ): toPages.count( page ) / len( toPages )
+      for page in list( set( toPages ) )
+    }
+  )
+
+@pytest.fixture
+def day( day_visits ):
+  toPages = [ visit.nextSlug for visit in day_visits ]
+  fromPages = [ visit.prevSlug for visit in day_visits ]
+  return Day(
+    day_visits[0].slug,
+    day_visits[0].title,
+    day_visits[0].date.strftime( '%Y-%m-%d' ),
+    len( { visit.ip for visit in day_visits } ),
+    np.mean( [
+        visit.timeOnPage for visit in day_visits
+        if visit.timeOnPage is not None
+    ] ),
+    toPages.count( None ) / len( toPages ),
+    {
+      (
+        'www' if page is None else page
+      ): fromPages.count( page ) / len( fromPages )
+      for page in list( set( fromPages ) )
+    },
+    {
+      (
+        'www' if page is None else page
+      ): toPages.count( page ) / len( toPages )
+      for page in list( set( toPages ) )
+    }
+  )
+
+@pytest.fixture
+def page( year_visits ):
+  toPages = [ visit.nextSlug for visit in year_visits ]
+  fromPages = [ visit.prevSlug for visit in year_visits ]
+  return Page(
+    year_visits[0].slug,
+    year_visits[0].title,
+    len( { visit.ip for visit in year_visits } ),
+    np.mean( [
+        visit.timeOnPage for visit in year_visits
         if visit.timeOnPage is not None
     ] ),
     toPages.count( None ) / len( toPages ),
@@ -661,6 +733,11 @@ def test_addYear( dynamo_client, table_init, table_name, year_visits, year ):
   assert 'year' in result.keys()
   assert dict( result['year'] ) == dict( year )
 
+def test_table_addYear( dynamo_client, table_name, year_visits ):
+  result = DynamoClient( table_name ).addYear( year_visits )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Could not add new year to table'
+
 def test_parameter_list_addYear( dynamo_client, table_init, table_name ):
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addYear( {} )
@@ -701,6 +778,11 @@ def test_addMonth( dynamo_client, table_init, table_name, month_visits, month ):
   result = DynamoClient( table_name ).addMonth( month_visits )
   assert 'month' in result.keys()
   assert dict( result['month'] ) == dict( month )
+
+def test_table_addMonth( dynamo_client, table_name, month_visits ):
+  result = DynamoClient( table_name ).addMonth( month_visits )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Could not add new month to table'
 
 def test_parameter_list_addMonth( dynamo_client, table_init, table_name ):
   with pytest.raises( ValueError ) as e:
@@ -743,6 +825,11 @@ def test_addWeek( dynamo_client, table_init, table_name, week_visits, week ):
   assert 'week' in result.keys()
   assert dict( result['week'] ) == dict( week )
 
+def test_table_addWeek( dynamo_client, table_name, week_visits ):
+  result = DynamoClient( table_name ).addWeek( week_visits )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Could not add new week to table'
+
 def test_parameter_list_addWeek( dynamo_client, table_init, table_name ):
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addWeek( {} )
@@ -778,3 +865,84 @@ def test_parameter_year_addWeek(
       )
     ] )
   assert str( e.value ) == 'List of visits must be from the same year and week'
+
+def test_addDay( dynamo_client, table_init, table_name, day_visits, day ):
+  result = DynamoClient( table_name ).addDay( day_visits )
+  assert 'day' in result.keys()
+  assert dict( result['day'] ) == dict( day )
+
+def test_table_addDay( dynamo_client, table_name, day_visits ):
+  result = DynamoClient( table_name ).addDay( day_visits )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Could not add new day to table'
+
+def test_parameter_list_addDay( dynamo_client, table_init, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addDay( {} )
+  assert str( e.value ) == 'Must pass a list'
+
+def test_parameter_slug_addDay(
+  dynamo_client, table_init, table_name, day_visits, visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addDay( day_visits + visits )
+  assert str( e.value ) == 'List of visits must have the same slug'
+
+def test_parameter_title_addDay(
+  dynamo_client, table_init, table_name, day_visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addDay( day_visits + [
+      Visit(
+        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '2020-12-23T20:32:26.000Z'
+      )
+    ] )
+  assert str( e.value ) == 'List of visits must have the same title'
+
+def test_parameter_year_addDay(
+  dynamo_client, table_init, table_name, day_visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addDay( day_visits + [
+      Visit(
+        '2021-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+        '2020-12-23T20:32:26.000Z'
+      )
+    ] )
+  assert str( e.value ) == 'List of visits must be from the same year, ' + \
+    'month, and day'
+
+def test_addPage( dynamo_client, table_init, table_name, year_visits, page ):
+  result = DynamoClient( table_name ).addPage( year_visits )
+  assert 'page' in result.keys()
+  assert dict( result['page'] ) == dict( page )
+
+def test_table_addPage( dynamo_client, table_name, year_visits ):
+  result = DynamoClient( table_name ).addPage( year_visits )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Could not add new page to table'
+
+def test_parameter_list_addPage( dynamo_client, table_init, table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addPage( {} )
+  assert str( e.value ) == 'Must pass a list'
+
+def test_parameter_slug_addPage(
+  dynamo_client, table_init, table_name, year_visits, visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addPage( year_visits + visits )
+  assert str( e.value ) == 'List of visits must have the same slug'
+
+def test_parameter_title_addPage(
+  dynamo_client, table_init, table_name, year_visits
+):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addPage( year_visits + [
+      Visit(
+        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '2020-12-23T20:32:26.000Z'
+      )
+    ] )
+  assert str( e.value ) == 'List of visits must have the same title'
