@@ -20,6 +20,6 @@ setuptools.setup(
     "Operating System :: OS Independent",
   ],
   python_requires='>=3.6',
-  install_requires=[ 'numpy', 'pandas', 'boto3', 'botocore' ],
+  install_requires=[ 'numpy', 'pandas', 'boto3', 'botocore', 'pyarrow' ],
   extras_require={ 'testing': [ 'pytest', 'moto', 'pytest-pylint' ] },
 )
