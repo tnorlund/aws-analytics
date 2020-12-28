@@ -82,7 +82,9 @@ class Day:
     self.month = int( dateMatch.group( 2 ) )
     self.day = int( dateMatch.group( 3 ) )
     self.numberVisitors = int( numberVisitors )
-    self.averageTime = float( averageTime )
+    self.averageTime = float( averageTime ) \
+      if averageTime is not None \
+      else averageTime
     self.percentChurn = float( percentChurn )
     self.fromPage = fromPage
     self.toPage = toPage
@@ -200,7 +202,9 @@ def itemToDay( item ):
   try:
     return Day(
       item['Slug']['S'], item['Title']['S'], item['SK']['S'].split('#')[2],
-      item['NumberVisitors']['N'], item['AverageTime']['N'],
+      item['NumberVisitors']['N'],
+      None if 'NULL' in item['AverageTime'].keys() \
+        else item['AverageTime']['N'],
       item['PercentChurn']['N'],
       {
         key: float( value['N'] )

@@ -61,7 +61,9 @@ class Page:
     self.slug = slug
     self.title = title
     self.numberVisitors = int( numberVisitors )
-    self.averageTime = float( averageTime )
+    self.averageTime = float( averageTime ) \
+      if averageTime is not None \
+      else averageTime
     self.percentChurn = float( percentChurn )
     self.fromPage = fromPage
     self.toPage = toPage
@@ -156,7 +158,9 @@ def itemToPage( item ):
   try:
     return Page(
       item['Slug']['S'], item['Title']['S'], item['NumberVisitors']['N'],
-      item['AverageTime']['N'], item['PercentChurn']['N'],
+      None if 'NULL' in item['AverageTime'].keys() \
+        else item['AverageTime']['N'],
+      item['PercentChurn']['N'],
       {
         key: float( value['N'] )
         for (key, value) in item['FromPage']['M'].items()

@@ -442,21 +442,29 @@ class DynamoClient( _Visitor, _Location ):
     # Find all the pages visited before and after this one.
     toPages = [ visit.nextSlug for visit in visits ]
     fromPages = [ visit.prevSlug for visit in visits ]
+    # Calculate the average time spent on the page.
+    pageTimes = [
+      visit.timeOnPage for visit in visits
+      if isinstance( visit.timeOnPage, float )
+    ]
+    if len( pageTimes ) > 1:
+      averageTime = np.mean( pageTimes )
+    elif len( pageTimes ) == 1:
+      averageTime = pageTimes[0]
+    else:
+      averageTime = None
+    # Create the week object
+    year = Year(
+      visits[0].slug,
+      visits[0].title,
+      visits[0].date.strftime( '%Y' ),
+      len( { visit.ip for visit in visits } ),
+      averageTime,
+      toPages.count( None ) / len( toPages ),
+      _pagesToDict( fromPages ),
+      _pagesToDict( toPages )
+    )
     try:
-      # Create the week object
-      year = Year(
-        visits[0].slug,
-        visits[0].title,
-        visits[0].date.strftime( '%Y' ),
-        len( { visit.ip for visit in visits } ),
-        np.mean( [
-          visit.timeOnPage for visit in visits
-          if visit.timeOnPage is not None
-        ] ),
-        toPages.count( None ) / len( toPages ),
-        _pagesToDict( fromPages ),
-        _pagesToDict( toPages )
-      )
       # Add the year to the table
       self.client.put_item( TableName = self.tableName, Item = year.toItem() )
       # Return the year added to the table
@@ -490,21 +498,29 @@ class DynamoClient( _Visitor, _Location ):
     # Find all the pages visited before and after this one.
     toPages = [ visit.nextSlug for visit in visits ]
     fromPages = [ visit.prevSlug for visit in visits ]
+    # Calculate the average time spent on the page.
+    pageTimes = [
+      visit.timeOnPage for visit in visits
+      if isinstance( visit.timeOnPage, float )
+    ]
+    if len( pageTimes ) > 1:
+      averageTime = np.mean( pageTimes )
+    elif len( pageTimes ) == 1:
+      averageTime = pageTimes[0]
+    else:
+      averageTime = None
+    # Create the week object
+    month = Month(
+      visits[0].slug,
+      visits[0].title,
+      visits[0].date.strftime( '%Y-%m' ),
+      len( { visit.ip for visit in visits } ),
+      averageTime,
+      toPages.count( None ) / len( toPages ),
+      _pagesToDict( fromPages ),
+      _pagesToDict( toPages )
+    )
     try:
-      # Create the week object
-      month = Month(
-        visits[0].slug,
-        visits[0].title,
-        visits[0].date.strftime( '%Y-%m' ),
-        len( { visit.ip for visit in visits } ),
-        np.mean( [
-            visit.timeOnPage for visit in visits
-            if visit.timeOnPage is not None
-        ] ),
-        toPages.count( None ) / len( toPages ),
-        _pagesToDict( fromPages ),
-        _pagesToDict( toPages )
-      )
       # Add the month to the table
       self.client.put_item( TableName = self.tableName, Item = month.toItem() )
       # Return the month added to the table
@@ -538,21 +554,29 @@ class DynamoClient( _Visitor, _Location ):
     # Find all the pages visited before and after this one.
     toPages = [ visit.nextSlug for visit in visits ]
     fromPages = [ visit.prevSlug for visit in visits ]
+    # Calculate the average time spent on the page.
+    pageTimes = [
+      visit.timeOnPage for visit in visits
+      if isinstance( visit.timeOnPage, float )
+    ]
+    if len( pageTimes ) > 1:
+      averageTime = np.mean( pageTimes )
+    elif len( pageTimes ) == 1:
+      averageTime = pageTimes[0]
+    else:
+      averageTime = None
+    # Create the week object
+    week = Week(
+      visits[0].slug,
+      visits[0].title,
+      visits[0].date.strftime( '%Y-%U' ),
+      len( { visit.ip for visit in visits } ),
+      averageTime,
+      toPages.count( None ) / len( toPages ),
+      _pagesToDict( fromPages ),
+      _pagesToDict( toPages )
+    )
     try:
-      # Create the week object
-      week = Week(
-        visits[0].slug,
-        visits[0].title,
-        visits[0].date.strftime( '%Y-%U' ),
-        len( { visit.ip for visit in visits } ),
-        np.mean( [
-            visit.timeOnPage for visit in visits
-            if visit.timeOnPage is not None
-        ] ),
-        toPages.count( None ) / len( toPages ),
-        _pagesToDict( fromPages ),
-        _pagesToDict( toPages )
-      )
       # Add the week to the table
       self.client.put_item( TableName = self.tableName, Item = week.toItem() )
       # Return the week added to the table
@@ -588,21 +612,29 @@ class DynamoClient( _Visitor, _Location ):
     # Find all the pages visited before and after this one.
     toPages = [ visit.nextSlug for visit in visits ]
     fromPages = [ visit.prevSlug for visit in visits ]
+    # Calculate the average time spent on the page.
+    pageTimes = [
+      visit.timeOnPage for visit in visits
+      if isinstance( visit.timeOnPage, float )
+    ]
+    if len( pageTimes ) > 1:
+      averageTime = np.mean( pageTimes )
+    elif len( pageTimes ) == 1:
+      averageTime = pageTimes[0]
+    else:
+      averageTime = None
+    # Create the day object.
+    day = Day(
+      visits[0].slug,
+      visits[0].title,
+      visits[0].date.strftime( '%Y-%m-%d' ),
+      len( { visit.ip for visit in visits } ),
+      averageTime,
+      toPages.count( None ) / len( toPages ),
+      _pagesToDict( fromPages ),
+      _pagesToDict( toPages )
+    )
     try:
-      # Create the day object.
-      day = Day(
-        visits[0].slug,
-        visits[0].title,
-        visits[0].date.strftime( '%Y-%m-%d' ),
-        len( { visit.ip for visit in visits } ),
-        np.mean( [
-            visit.timeOnPage for visit in visits
-            if visit.timeOnPage is not None
-        ] ),
-        toPages.count( None ) / len( toPages ),
-        _pagesToDict( fromPages ),
-        _pagesToDict( toPages )
-      )
       # Add the day to the table
       self.client.put_item( TableName = self.tableName, Item = day.toItem() )
       # Return the day added to the table
@@ -634,20 +666,28 @@ class DynamoClient( _Visitor, _Location ):
     # Find all the pages visited before and after this one.
     toPages = [ visit.nextSlug for visit in visits ]
     fromPages = [ visit.prevSlug for visit in visits ]
+    # Calculate the average time spent on the page.
+    pageTimes = [
+      visit.timeOnPage for visit in visits
+      if isinstance( visit.timeOnPage, float )
+    ]
+    if len( pageTimes ) > 1:
+      averageTime = np.mean( pageTimes )
+    elif len( pageTimes ) == 1:
+      averageTime = pageTimes[0]
+    else:
+      averageTime = None
+    # Create the page object.
+    page = Page(
+      visits[0].slug,
+      visits[0].title,
+      len( { visit.ip for visit in visits } ),
+      averageTime,
+      toPages.count( None ) / len( toPages ),
+      _pagesToDict( fromPages ),
+      _pagesToDict( toPages )
+    )
     try:
-      # Create the page object.
-      page = Page(
-        visits[0].slug,
-        visits[0].title,
-        len( { visit.ip for visit in visits } ),
-        np.mean( [
-            visit.timeOnPage for visit in visits
-            if visit.timeOnPage is not None
-        ] ),
-        toPages.count( None ) / len( toPages ),
-        _pagesToDict( fromPages ),
-        _pagesToDict( toPages )
-      )
       # Add the page to the table
       self.client.put_item( TableName = self.tableName, Item = page.toItem() )
       # Return the page added to the table
@@ -655,3 +695,68 @@ class DynamoClient( _Visitor, _Location ):
     except ClientError as e:
       print( f'ERROR addPage: { e }')
       return { 'error': 'Could not add new page to table' }
+
+  def updatePage( self, visits ):
+    '''Adds the page, and its days/weeks/months/years to the table.
+
+    Parameters
+    ----------
+    visits : list[ Visit ]
+      The specific page's visits that are processed to the page, days, weeks,
+      months, and years items.
+
+    Returns
+    -------
+    results : dict
+      The result of adding the new page, days, weeks, months, and years. This
+      could be either the error that occurs or the new page, days, weeks,
+      months, and years.
+    '''
+    # Add each day's visits
+    days = []
+    for day_visits in [
+      [ visit for visit in visits if visit.date.strftime( '%Y-%m-%d' ) == day ]
+      for day in { visit.date.strftime( '%Y-%m-%d' ) for visit in visits }
+    ]:
+      day_result = self.addDay( day_visits )
+      if 'error' in day_result.keys():
+        return { 'error': day_result['error'] }
+      days.append( day_result['day'] )
+    # Add each week's visits
+    weeks = []
+    for week_visits in [
+      [ visit for visit in visits if visit.date.strftime( '%Y-%U' ) == week ]
+      for week in { visit.date.strftime( '%Y-%U' ) for visit in visits }
+    ]:
+      week_result = self.addWeek( week_visits )
+      if 'error' in week_result.keys():
+        return { 'error': week_result['error'] }
+      days.append( week_result['week'] )
+    # Add each months's visits
+    months = []
+    for month_visits in [
+      [ visit for visit in visits if visit.date.strftime( '%Y-%m' ) == month ]
+      for month in { visit.date.strftime( '%Y-%m' ) for visit in visits }
+    ]:
+      month_result = self.addMonth( month_visits )
+      if 'error' in month_result.keys():
+        return { 'error': month_result['error'] }
+      months.append( month_result['month'] )
+    # Add each years's visits
+    years = []
+    for year_visits in [
+      [ visit for visit in visits if visit.date.strftime( '%Y' ) == year ]
+      for year in { visit.date.strftime( '%Y' ) for visit in visits }
+    ]:
+      year_result = self.addYear( year_visits )
+      if 'error' in year_result.keys():
+        return { 'error': year_result['error'] }
+      years.append( year_result['year'] )
+    # Add the page to the table
+    page_result = self.addPage( visits )
+    if 'error' in page_result.keys():
+      return { 'error': page_result['error'] }
+    return {
+      'page': page_result['page'], 'days': days, 'weeks': weeks,
+      'months': months, 'years': years
+    }

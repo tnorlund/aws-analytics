@@ -152,6 +152,82 @@ def visits():
   ]
 
 @pytest.fixture
+def year_visits():
+  '''A list of proper Visit objects that span a year.'''
+  return [
+    Visit(
+      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+    ),
+    Visit(
+      '2020-02-01T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    ),
+    Visit(
+      '2020-03-01T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    )
+]
+
+@pytest.fixture
+def month_visits():
+  '''A list of proper Visit objects that span a month.'''
+  return [
+    Visit(
+      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+    ),
+    Visit(
+      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    ),
+    Visit(
+      '2020-01-25T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    ),
+    Visit(
+      '2020-01-30T00:00:00.000Z', '0.0.0.2', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    )
+  ]
+
+@pytest.fixture
+def week_visits():
+  '''A list of proper Visit objects that span a week.'''
+  return [
+    Visit(
+      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+    ),
+    Visit(
+      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    ),
+    Visit(
+      '2020-01-04T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    ),
+  ]
+
+@pytest.fixture
+def day_visits():
+  '''A list of proper Visit objects that span a day.'''
+  return [
+    Visit(
+      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+    ),
+    Visit(
+      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    ),
+    Visit(
+      '2020-01-03T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
+    ),
+  ]
+
+@pytest.fixture
 def session():
   '''A proper Session object.'''
   return Session( '2020-01-01T00:00:00.000Z', '0.0.0.0', 60.0, 60.0 )
