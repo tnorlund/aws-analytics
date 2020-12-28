@@ -3,7 +3,7 @@ import os
 import boto3
 import pytest
 
-from moto import mock_dynamodb2
+from moto import mock_dynamodb2, mock_s3
 from dynamo.entities import Visitor, Browser, Visit, Session, Location, Page
 
 @pytest.fixture
@@ -20,6 +20,12 @@ def dynamo_client( aws_credentials ):
   '''The mocked DynamoDB client'''
   with mock_dynamodb2():
     conn = boto3.client( "dynamodb", region_name="us-east-1" )
+    yield conn
+
+@pytest.fixture
+def s3_client( aws_credentials ):
+  with mock_s3():
+    conn = boto3.client( 's3', region_name = 'us-east-1' )
     yield conn
 
 @pytest.fixture
@@ -83,6 +89,17 @@ def table_init( dynamo_client, table_name ):
 def table_del( dynamo_client, table_name ):
   '''Mocks the deletion of the DynamoDB table.'''
   dynamo_client.delete_table( table_name )
+
+@pytest.fixture
+def bucket_name():
+  '''The name of the mocked S3 bucket.'''
+  return 'test-bucket'
+
+@pytest.fixture
+def s3_init( s3_client, bucket_name ):
+  '''Mocked the creation of a S3 bucket.'''
+  s3_client.create_bucket( Bucket = bucket_name )
+  yield
 
 @pytest.fixture
 def ip():

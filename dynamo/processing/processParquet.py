@@ -3,43 +3,33 @@ import os
 import sys
 import io
 import datetime
-import boto3
 import numpy as np
 import pandas as pd
-# import pyarrow # pylint: disable=unused-import
+import pyarrow # pylint: disable=unused-import
 import urllib3
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.data import DynamoClient # pylint: disable=wrong-import-position
 from dynamo.processing import processDF, processVisits # pylint: disable=wrong-import-position
 from dynamo.entities import Visitor, Visit # pylint: disable=wrong-import-position
 from dynamo.entities import requestToLocation # pylint: disable=wrong-import-position
 from dynamo.entities import Browser # pylint: disable=wrong-import-position
 
 http = urllib3.PoolManager()
-s3 = boto3.client(
-  's3',
-  region_name = os.environ.get( 'REGION_NAME' )
-)
 
-def processParquet( key, tableName ):
+def processParquet( key, dynamo_client, s3_client ):
   '''Adds the data from a '.parquet' file to the DynamoDB table.
 
   Parameters
   ----------
   key : str
     The key of the '.parquet' file in the S3 bucket.
-  tableName : str
-    The name of the DynamoDB table.
+  dynamo_client : DynamoClient
+    The DynamoDB client.
+  s3_client : S3Client
   '''
   try:
-    request = s3.get_object(
-      Bucket = os.environ.get('BUCKET_NAME'),
-      Key = key
-    )
-    # Create a DynamoDB client
-    client = DynamoClient( tableName )
+    request = s3_client.getObject( key )
     # Read the parquet file as a pandas DF
     df = pd.read_parquet( io.BytesIO( request['Body'].read() ) )
     # Get the unique IP addresses
@@ -47,7 +37,7 @@ def processParquet( key, tableName ):
     # Iterate over the IP addresses to organize the DF's per visitor
     for ip in ips:
       # Get the visitor details from the table.
-      results = client.getVisitorDetails( Visitor( ip ) )
+      results = dynamo_client.getVisitorDetails( Visitor( ip ) )
       # Process the entire dataframe to get the cleaned set
       v_df = processDF( df, ip )
       # When the visitor is not found in the database, the visitor, location,
@@ -55,7 +45,7 @@ def processParquet( key, tableName ):
       if 'error' in results.keys() \
         and results['error'] == 'Visitor not in table':
         # Add the new visitor and their data to the table
-        result = client.addNewVisitor(
+        result = dynamo_client.addNewVisitor(
           Visitor( ip, 1 ),
           requestToLocation(
             json.loads(
@@ -104,10 +94,10 @@ def processParquet( key, tableName ):
         # the session to include these visits.
         if (visits[1].date - lastSessionEnd).days < 1 \
           and (visits[1].date - lastSessionEnd).seconds/3600 < 0.5:
-          result = _handleSessionUpdate( lastSession, visits, client )
+          result = _handleSessionUpdate( lastSession, visits, dynamo_client )
         # Otherwise, add the browser, create a new session, and add the visits.
         else:
-          result = client.addNewSession(
+          result = dynamo_client.addNewSession(
             Visitor( ip ),
             [
               Browser(
@@ -137,7 +127,7 @@ def processParquet( key, tableName ):
     raise e
 
 
-def _handleSessionUpdate( lastSession, visits, client ):
+def _handleSessionUpdate( lastSession, visits, dynamo_client ):
   '''Updates that latest session with the visits in this '.parquet' file.
 
   Parameters
@@ -148,7 +138,7 @@ def _handleSessionUpdate( lastSession, visits, client ):
   visits : list[ Visit ]
     The visits found in this '.parquet' file. These are added to the latest
     session and then added to the table.
-  client : DynamoClient
+  dynamo_client : DynamoClient
     The DynamoDB client used to access the table.
 
   Returns
@@ -157,7 +147,7 @@ def _handleSessionUpdate( lastSession, visits, client ):
     The result of adding the updated session to the table. This could be the
     updated session or the error that occurs while updating the session.
   '''
-  result = client.getSession( lastSession )
+  result = dynamo_client.getSession( lastSession )
   if 'error' in result.keys():
     return { 'error': result['error'] }
   # Combine the previous visits and the ones in this S3 PUT
@@ -172,7 +162,7 @@ def _handleSessionUpdate( lastSession, visits, client ):
     visits[-1].date - visits[0].date
   ).total_seconds()
   # Add the updated session and visits to the table.
-  result = client.updateSession( result['session'], visits )
+  result = dynamo_client.updateSession( result['session'], visits )
   if 'error' in result.keys():
     return { 'error': result['error'] }
   return { 'session': result['Session'], 'visits': result['visits'] }
