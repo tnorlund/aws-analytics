@@ -45,7 +45,7 @@ class DynamoClient( _Visitor, _Location ):
   tableName : str
     The name of the DynamoDB table.
   '''
-  def __init__( self, tableName, regionName='us-east-1' ):
+  def __init__( self, tableName, regionName = 'us-east-1' ):
     '''Constructs the necessary attributes for the DynamoDB client object.
 
     Parameters

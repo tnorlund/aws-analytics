@@ -44,15 +44,45 @@ class S3Client():
     )
 
   def listParquet( self, prefix='/'):
-    '''Lists the '.parquet' files in a bucket.
+    '''Lists the '.parquet' objects in a bucket.
 
     Parameters
     ----------
     prefix : str, optional
       The prefix of the '.parquet' file requested. (default is '/')
+
+    Returns
+    -------
+    objects : list[ str ]
+      The '.parquet' objects found in the bucket.
     '''
-    return self.client.list_objects_v2(
+    # Use a list to store the objects in the bucket
+    objects = []
+    # Request the objects from the bucket.
+    request = self.client.list_objects_v2(
       Bucket = self.bucketname,
       Delimiter = 'parquet',
       Prefix = prefix
     )
+    # Append the files to the list of files
+    objects += [ file['Prefix'] for file in request['CommonPrefixes'] ]
+    objects.sort()
+    # When there are over 1,000 objects, the request is truncated. The
+    # continuation token is used to query the remaining objects from the
+    # bucket.
+    if request['IsTruncated']:
+      while True:
+        continuationToken = request['ContinuationToken']
+        request = self.client.list_objects_v2(
+          Bucket = self.bucketname,
+          Delimiter = 'parquet',
+          Prefix = prefix,
+          ContinuationToken = continuationToken
+        )
+        objects += [ file['Prefix'] for file in request['CommonPrefixes'] ]
+        objects.sort()
+        # When the request is no longer truncated, the last of the objects have
+        # been requested.
+        if not request['IsTruncated']:
+          break
+    return objects

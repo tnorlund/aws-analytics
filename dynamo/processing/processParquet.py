@@ -11,9 +11,8 @@ sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
 from dynamo.processing import processDF, processVisits # pylint: disable=wrong-import-position
-from dynamo.entities import Visitor, Visit # pylint: disable=wrong-import-position
+from dynamo.entities import Visitor, Visit, Browser # pylint: disable=wrong-import-position
 from dynamo.entities import requestToLocation # pylint: disable=wrong-import-position
-from dynamo.entities import Browser # pylint: disable=wrong-import-position
 
 http = urllib3.PoolManager()
 
@@ -147,7 +146,7 @@ def _handleSessionUpdate( lastSession, visits, dynamo_client ):
     The result of adding the updated session to the table. This could be the
     updated session or the error that occurs while updating the session.
   '''
-  result = dynamo_client.getSession( lastSession )
+  result = dynamo_client.getSessionDetails( lastSession )
   if 'error' in result.keys():
     return { 'error': result['error'] }
   # Combine the previous visits and the ones in this S3 PUT

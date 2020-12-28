@@ -25,10 +25,10 @@ def test_listParquet( bucket_name ):
   file1.close()
   client = S3Client( bucket_name, 'us-west-1' )
   client.putObject( '/test.parquet', 'test.parquet' )
-  result = client.listParquet()
-  assert 'CommonPrefixes' in result.keys()
-  assert all( 'Prefix' in obj.keys() for obj in result['CommonPrefixes'] )
-  assert len( result['CommonPrefixes'] ) == 1
+  objects = client.listParquet()
+  assert isinstance( objects, list )
+  assert all( isinstance( obj, str ) for obj in objects )
+  assert len( objects ) == 1
   os.remove( 'test.parquet' )
 
 @pytest.mark.usefixtures( 's3_client', 's3_init' )
