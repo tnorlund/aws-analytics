@@ -4,7 +4,7 @@ import boto3
 import pytest
 
 from moto import mock_dynamodb2
-from dynamo.entities import Visitor, Browser, Visit, Session, Location
+from dynamo.entities import Visitor, Browser, Visit, Session, Location, Page
 
 @pytest.fixture
 def aws_credentials():
@@ -142,12 +142,12 @@ def visits():
   '''A list of proper Visit objects.'''
   return[
     Visit(
-      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
-      '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-01T00:01:00.000Z', '0.0.0.0', '0', 'Blog', '/blog',
-      '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+      '2020-01-03T00:01:00.000Z', '0.0.0.0', '0', 'Blog', '/blog',
+      '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     )
   ]
 
@@ -228,9 +228,30 @@ def day_visits():
   ]
 
 @pytest.fixture
+def page():
+  return Page(
+    '/',
+    'Tyler Norlund',
+    2,
+    90,
+    0.3333333333333333,
+    { '/': 0.3333333333333333, 'www': 0.6666666666666666 },
+    {
+      '/blog': 0.3333333333333333,
+      '/resume': 0.3333333333333333,
+      'www': 0.3333333333333333
+    }
+  )
+
+@pytest.fixture
 def session():
   '''A proper Session object.'''
-  return Session( '2020-01-01T00:00:00.000Z', '0.0.0.0', 60.0, 60.0 )
+  return Session( '2020-01-03T00:00:00.000Z', '0.0.0.0', 60.0, 60.0 )
+
+@pytest.fixture
+def year_session():
+  '''A proper Session object.'''
+  return Session( '2020-01-01T00:00:00.000Z', '0.0.0.1', 60.0, 60.0 )
 
 
 @pytest.fixture

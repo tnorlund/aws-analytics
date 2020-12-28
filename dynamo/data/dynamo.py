@@ -11,6 +11,8 @@ from dynamo.data._location import _Location # pylint: disable=wrong-import-posit
 from dynamo.entities import Visit, Session, Browser # pylint: disable=wrong-import-position
 from dynamo.entities import Year, Month, Week, Day, Page # pylint: disable=wrong-import-position
 from dynamo.entities import itemToVisit, itemToSession # pylint: disable=wrong-import-position
+from dynamo.entities import itemToYear, itemToMonth, itemToWeek, itemToDay # pylint: disable=wrong-import-position
+from dynamo.entities import itemToPage # pylint: disable=wrong-import-position
 
 def _pagesToDict( pages ):
   '''Converts a list of pages to a dict of ratios.
@@ -712,6 +714,12 @@ class DynamoClient( _Visitor, _Location ):
       could be either the error that occurs or the new page, days, weeks,
       months, and years.
     '''
+    if not isinstance( visits, list ):
+      raise ValueError( 'Must pass a list of Visit objects' )
+    if not all( [
+      isinstance( visit, Visit ) for visit in visits
+    ] ):
+      raise ValueError( 'List of visits must be of Visit type' )
     # Add each day's visits
     days = []
     for day_visits in [
@@ -760,3 +768,63 @@ class DynamoClient( _Visitor, _Location ):
       'page': page_result['page'], 'days': days, 'weeks': weeks,
       'months': months, 'years': years
     }
+
+  def getPageDetails( self, page ):
+    '''Gets a page and its days, weeks, months, and years of analytics.
+
+    Parameters
+    ----------
+    page : Page
+      The page to request the details of.
+
+    Raises
+    ------
+    Exception
+      When the items returned by the query are not either a visit, session,
+      page, day, week, month, or year.
+    KeyError
+      When the items returned are not structured as expected
+    ClientError
+      When the DynamoDB client raises an exception.
+
+    Returns
+    -------
+    result : dict
+      The result of requesting the page from the table. This contains either the
+      error that occurred or the page's analytics.
+    '''
+    if not isinstance( page, Page ):
+      raise ValueError( 'Must pass a Page object' )
+    try:
+      result = self.client.query(
+        TableName = self.tableName,
+        IndexName = 'GSI1',
+        KeyConditionExpression = '#gsi1 = :gsi1',
+        ExpressionAttributeNames = { '#gsi1': 'GSI1PK' },
+        ExpressionAttributeValues = { ':gsi1': page.gsi1pk() },
+        ScanIndexForward = True
+      )
+      # Return the error when there are no items returned from the table.
+      if len( result['Items'] ) == 0:
+        return { 'error': 'Page not in table' }
+      # Use a dictionary to store the items returned from the table
+      data = {
+        'visits': [], 'days': [], 'weeks': [], 'months': [], 'years': []
+      }
+      for item in result['Items']:
+        if item['Type']['S'] == 'visit':
+          data['visits'].append( itemToVisit( item ) )
+        elif item['Type']['S'] == 'page':
+          data['page'] = itemToPage( item )
+        elif item['Type']['S'] == 'day':
+          data['days'].append( itemToDay( item ) )
+        elif item['Type']['S'] == 'week':
+          data['weeks'].append( itemToWeek( item ) )
+        elif item['Type']['S'] == 'month':
+          data['months'].append( itemToMonth( item ) )
+        elif item['Type']['S'] == 'year':
+          data['years'].append( itemToYear( item ) )
+      return data
+    except ClientError as e:
+      print( f'ERROR getPageDetails: { e }')
+      return { 'error': 'Could not get page from table' }
