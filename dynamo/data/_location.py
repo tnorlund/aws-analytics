@@ -5,6 +5,7 @@ sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
 from dynamo.entities import Location, itemToLocation # pylint: disable=wrong-import-position
+from dynamo.data.util import chunkList # pylint: disable=wrong-import-position
 
 class _Location:
   def addLocation( self, location ):
@@ -36,6 +37,47 @@ class _Location:
           'error': f'Visitor\'s location is already in table { location }'
         }
       return { 'error': 'Could not add new location to table' }
+
+  def addLocations( self, locations ):
+    '''Adds multiple locations to the table.
+
+    Parameters
+    ----------
+    locations : list[ Location ]
+      The locations to be added to the table.
+
+    Returns
+    -------
+    result : dict
+      The result of adding the locations to the table. This could be the
+      locations added or the error that occurred.
+    '''
+    if not isinstance( locations, list ):
+      raise ValueError( 'Must pass a list' )
+    if any( not isinstance( location, Location ) for location in locations ):
+      raise ValueError( 'Must pass Location objects' )
+    try:
+      if len( locations ) > 25:
+        for sub_locations in chunkList( locations, 25 ):
+          self.client.batch_write_item(
+            RequestItems = {
+              self.tableName: [
+                { 'PutRequest': { 'Item': location.toItem() } }
+                for location in sub_locations
+              ] },
+          )
+      else:
+        self.client.batch_write_item(
+          RequestItems = {
+            self.tableName: [
+              { 'PutRequest': { 'Item': location.toItem() } }
+              for location in locations
+            ] },
+        )
+      return { 'locations': locations }
+    except ClientError as e:
+      print( f'ERROR addLocations: { e }')
+      return { 'error': 'Could not add locations to table' }
 
   def removeLocation( self, location ):
     '''Removes a location from the table.

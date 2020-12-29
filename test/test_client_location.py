@@ -30,6 +30,35 @@ def test_parameter_addLocation( table_name ):
   assert str( e.value ) == 'Must pass a Location object'
 
 @pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
+def test_addLocations( table_name ):
+  result = DynamoClient( table_name ).addLocations( locations() )
+  assert 'locations' in result.keys()
+  assert len( result['locations'] ) == len( locations() )
+
+def test_table_addLocations( table_name ):
+  result = DynamoClient( table_name ).addLocations( locations() )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Could not add locations to table'
+
+@pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
+def test_batch_addLocations( table_name ):
+  result = DynamoClient( table_name ).addLocations( locations() * 10 )
+  assert 'locations' in result.keys()
+  assert len( result['locations'] ) == len( locations() * 10 )
+
+@pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
+def test_list_addLocations( table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addLocations( None )
+  assert str( e.value ) == 'Must pass a list'
+
+@pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
+def test_element_addLocations( table_name ):
+  with pytest.raises( ValueError ) as e:
+    assert DynamoClient( table_name ).addLocations( [ None ] )
+  assert str( e.value ) == 'Must pass Location objects'
+
+@pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
 def test_removeLocation( table_name ):
   client = DynamoClient( table_name )
   client.addLocation( location() )
@@ -50,9 +79,14 @@ def test_parameter_removeLocation( table_name ):
   assert str( e.value ) == 'Must pass a Location object'
 
 @pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
-def test_getLocations( table_name ):
+def test_listLocations( table_name ):
   client = DynamoClient( table_name )
   for loc in locations():
     client.addLocation( loc )
   result = client.listLocations()
   assert len( result ) == len( locations() )
+
+def test_table_listLocations( table_name ):
+  result = DynamoClient( table_name ).listLocations( )
+  assert 'error' in result.keys()
+  assert result['error'] == 'Could not get visits from table'
