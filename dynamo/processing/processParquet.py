@@ -11,7 +11,7 @@ sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
 from dynamo.processing import processDF, processVisits # pylint: disable=wrong-import-position
-from dynamo.entities import Visitor, Visit, Browser # pylint: disable=wrong-import-position
+from dynamo.entities import Visitor # pylint: disable=wrong-import-position
 from dynamo.entities import requestToLocation # pylint: disable=wrong-import-position
 
 http = urllib3.PoolManager()
@@ -24,8 +24,9 @@ def processParquet( key, dynamo_client, s3_client ):
   key : str
     The key of the '.parquet' file in the S3 bucket.
   dynamo_client : DynamoClient
-    The DynamoDB client.
+    The DynamoDB client used to store the transformed data.
   s3_client : S3Client
+    The S3 client used to get the '.parquet' file from.
   '''
   try:
     request = s3_client.getObject( key )
@@ -36,98 +37,114 @@ def processParquet( key, dynamo_client, s3_client ):
     # Iterate over the IP addresses to organize the DF's per visitor
     for ip in ips:
       # Get the visitor details from the table.
-      results = dynamo_client.getVisitorDetails( Visitor( ip ) )
-      # Process the entire dataframe to get the cleaned set
-      v_df = processDF( df, ip )
+      visitor_details = dynamo_client.getVisitorDetails( Visitor( ip ) )
+      # Get the browsers and visits of the specific IP address.
+      visitor_dict = processDF( df, ip )
       # When the visitor is not found in the database, the visitor, location,
       # browser, session, and visits must be added to the database.
-      if 'error' in results.keys() \
-        and results['error'] == 'Visitor not in table':
+      if 'error' in visitor_details.keys() \
+        and visitor_details['error'] == 'Visitor not in table':
         # Add the new visitor and their data to the table
-        result = dynamo_client.addNewVisitor(
-          Visitor( ip, 1 ),
-          requestToLocation(
-            json.loads(
-              http.request(
-                'GET',
-                f'''https://geo.ipify.org/api/v1?apiKey={
-                  os.environ.get('IPIFY_KEY')
-                }&ipAddress={ ip }'''
-              ).data.decode( 'utf8' )
-            )
-          ),
-          [
-            Browser(
-              row['app'], row['ip'], row['width'], row['height'], row['id']
-            )
-            for index, row in v_df.loc[
-              v_df[
-                ['app', 'width', 'height']
-              ].drop_duplicates().dropna().index
-            ].iterrows()
-          ],
-          [
-            Visit(
-              row['id'], row['ip'], row['user'], row['title'], row['slug'],
-              v_df.iloc[0]['id'], row['seconds'], row['prevTitle'],
-              row['prevSlug'], row['nextTitle'], row['nextSlug']
-            ) for index, row in v_df.iterrows()
-          ]
+        _createNewVisitor(
+          ip, visitor_dict['browsers'], visitor_dict['visits'], dynamo_client
         )
       # Otherwise, determine whether to add a new session or update the
       # visitor's last session.
       else:
-        # Parse the visits from the visitor's DF
-        visits = [
-          Visit(
-            row['id'], row['ip'], row['user'], row['title'], row['slug'],
-            v_df.iloc[0]['id'], row['seconds'], row['prevTitle'],
-            row['prevSlug'], row['nextTitle'], row['nextSlug']
-          ) for index, row in v_df.iterrows()
-        ]
-        # Calculate the end datetime of the last session
-        lastSession = results['sessions'][-1]
+        # Calculate the end datetime of the visitor's last session. This is the
+        # session's starting datetime plus the total time of the session.
+        lastSession = visitor_details['sessions'][-1]
         lastSessionEnd = lastSession.sessionStart + \
           datetime.timedelta( seconds=lastSession.totalTime )
-        # When the time since the last session is less than 30 min ago, update
-        # the session to include these visits.
-        if (visits[1].date - lastSessionEnd).days < 1 \
-          and (visits[1].date - lastSessionEnd).seconds/3600 < 0.5:
-          result = _handleSessionUpdate( lastSession, visits, dynamo_client )
-        # Otherwise, add the browser, create a new session, and add the visits.
+        # Update the session to include these visits when the time between the
+        # end of the last session and the first visit is less than 30 minutes.
+        if ( visitor_dict['visits'][0].date - lastSessionEnd ).days < 1 \
+          and (
+            visitor_dict['visits'][0].date - lastSessionEnd
+        ).seconds/3600 < 0.5:
+          _updateSession( lastSession, visitor_dict['visits'], dynamo_client )
+        # Create a new session when the time between the last session and the
+        # first of these visits is greater than 30 minutes.
         else:
-          result = dynamo_client.addNewSession(
-            Visitor( ip ),
-            [
-              Browser(
-                row['app'], row['ip'], row['width'], row['height'], row['id']
-              )
-              for index, row in v_df.loc[
-                v_df[
-                  ['app', 'width', 'height']
-                ].drop_duplicates().dropna().index
-              ].iterrows()
-            ],
-            visits
+          _addSessionToVisitor(
+            ip, visitor_dict['visits'], visitor_dict['browsers'], dynamo_client
           )
-          if 'error' in result.keys():
-            print( 'error' )
-            print( result['error'] )
   except Exception as e:
     print( f'ERROR processParquet { e }' )
     print(
-      f'''Error getting object {
-        key
-      } from bucket {
-        os.environ.get( 'BUCKET_NAME' )
-      }. Make sure they exist and your bucket is in the same region as this''' \
-      + 'function.'
+      f'Error getting object { key } from bucket { s3_client.bucketname }.' + \
+        ' Make sure they exist and your bucket is in the same region as ' + \
+        'this function.'
     )
     raise e
 
+def _createNewVisitor( ip, browsers, visits, dynamo_client ):
+  '''Adds new Visitor data from a visitor-specific DataFrame to the table.
 
-def _handleSessionUpdate( lastSession, visits, dynamo_client ):
-  '''Updates that latest session with the visits in this '.parquet' file.
+  Parameters
+  ----------
+  ip : str
+    The IP address of the visitor.
+  v_df : pd.DataFrame
+    The visitor-specific DataFrame that holds the session's data.
+  dynamo_client : DynamoClient
+    The DynamoDB client used to access the table
+
+  Returns
+  -------
+  result : dict
+    The result of adding the new visitor and their data to the table. This
+    could be new visitor, location, browser, session, and visits added or the
+    error that occurred.
+  '''
+  result = dynamo_client.addNewVisitor(
+    Visitor( ip, 1 ), # Visitor
+    requestToLocation( json.loads(
+      http.request(
+        'GET',
+        f'''https://geo.ipify.org/api/v1?apiKey={ os.environ.get('IPIFY_KEY')
+        }&ipAddress={ ip }'''
+      ).data.decode( 'utf8' )
+    ) ), # Location
+    browsers, # Browsers
+    visits # Visits
+  )
+  if 'error' in result.keys():
+    print( 'ERROR _createNewSession ' + result['error'] )
+  return result
+
+def _addSessionToVisitor( ip, visits, browsers, dynamo_client ):
+  '''Creates a new Session with the data from a visitor-specific DataFrame.
+
+  Parameters
+  ----------
+  ip : str
+    The IP address of the visitor.
+  v_df : pd.DataFrame
+    The visitor-specific DataFrame that holds the session's data.
+  dynamo_client : DynamoClient
+    The DynamoDB client used to access the table.
+  visits : list[ Visit ]
+    The list of visits found in the parquet file.
+
+  Returns
+  -------
+  result : dict
+    The result of adding the new visitor and their data to the table. This
+    could be new visitor, location, browser, session, and visits added or the
+    error that occurred.
+  '''
+  result = dynamo_client.addNewSession(
+    Visitor( ip ), # Visitor
+    browsers, # Browsers
+    visits # Visits
+  )
+  if 'error' in result.keys():
+    print( 'ERROR _addSessionToVisitor ' + result['error'] )
+  return result
+
+def _updateSession( lastSession, visits, dynamo_client ):
+  '''Updates the latest session with the visits in this '.parquet' file.
 
   Parameters
   ----------
@@ -163,5 +180,5 @@ def _handleSessionUpdate( lastSession, visits, dynamo_client ):
   # Add the updated session and visits to the table.
   result = dynamo_client.updateSession( result['session'], visits )
   if 'error' in result.keys():
-    return { 'error': result['error'] }
-  return { 'session': result['Session'], 'visits': result['visits'] }
+    print( 'ERROR _updateSession ' + result['error'] )
+  return result

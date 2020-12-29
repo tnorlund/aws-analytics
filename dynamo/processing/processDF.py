@@ -13,8 +13,9 @@ def processDF( df, ip ):
 
   Returns
   -------
-  v_df : pd.DataFrame
-    The visitor's DataFrame that only contains the attributes specific to them.
+  result : dict
+    A dictionary that contains both the browsers and visits related to the
+    given IP address.
   '''
   v_df = df[df['ip'] == ip].drop_duplicates().sort_values( by='id' ) \
     .reset_index()
@@ -39,4 +40,19 @@ def processDF( df, ip ):
   v_df.loc[indexes + 1, ['prevSlug', 'prevTitle']] = None
   # Replace the NaN's with the None type for the entities
   v_df = v_df.replace( { np.nan: None } )
-  return v_df
+  # Parse the visits from the visitor's DF.
+  visits = [
+    Visit(
+      row['id'], row['ip'], row['user'], row['title'], row['slug'],
+      v_df.iloc[0]['id'], row['seconds'], row['prevTitle'],
+      row['prevSlug'], row['nextTitle'], row['nextSlug']
+    ) for index, row in v_df.iterrows()
+  ]
+  # Parse the browsers from the visitor's DF.
+  browsers = [
+    Browser( row['app'], row['ip'], row['width'], row['height'], row['id'] )
+    for index, row in v_df.loc[
+      v_df[ ['app', 'width', 'height'] ].drop_duplicates().dropna().index
+    ].iterrows()
+  ]
+  return { 'visits': visits, 'browsers': browsers }
