@@ -434,15 +434,27 @@ class DynamoClient( _Visitor, _Location ):
       isinstance( visit, Visit ) for visit in visits
     ] ):
       raise ValueError( 'List of visits must be of Visit type' )
+    # Get all of the seconds per page visit that exist.
     pageTimes = [
       visit.timeOnPage for visit in visits
       if isinstance( visit.timeOnPage, float )
     ]
+    # Calculate the average time the visitor spent on the pages. When there are
+    # no page times, there is no average time.
+    if len( pageTimes ) == 1:
+      averageTime = pageTimes[0]
+    elif len( pageTimes ) > 1:
+      averageTime = np.mean( pageTimes )
+    else:
+      averageTime = None
+    # Calculate the total time spent in this session. When there is only one
+    # visit, there is no total time.
+    if len( visits ) == 1:
+      totalTime = None
+    else:
+      totalTime = ( visits[-1].date - visits[0].date ).total_seconds()
     session = Session(
-      visits[0].date,
-      visits[0].ip,
-      np.mean( pageTimes ) if len( pageTimes ) > 1 else pageTimes[0],
-      ( visits[-1].date - visits[0].date ).total_seconds()
+      visits[0].date, visits[0].ip, averageTime, totalTime
     )
     try:
       self.client.put_item(

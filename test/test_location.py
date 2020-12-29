@@ -165,6 +165,53 @@ def test_requestToLocation():
         'city': 'Westlake Village',
         'lat': 34.14584,
         'lng': -118.80565,
+        'postalCode': '91361',
+        'timezone': '-08:00',
+        'geonameId': 5408395
+      },
+      'domains': ['cpe-75-82-84-171.socal.res.rr.com'],
+      'as': {
+        'asn': 20001,
+        'name': 'Charter Communications (20001)',
+        'route': '75.82.0.0/15',
+        'domain': 'https://www.spectrum.com',
+        'type': 'Cable/DSL/ISP'
+      },
+      'isp': 'Charter Communications',
+      'proxy': { 'proxy': False, 'vpn': False, 'tor': False }
+    }
+  )
+  assert location.ip == '0.0.0.0'
+  assert location.country == 'US'
+  assert location.region == 'California'
+  assert location.city == 'Westlake Village'
+  assert location.latitude == 34.14584
+  assert location.longitude == -118.80565
+  assert location.postalCode == '91361'
+  assert location.timeZone == '-08:00'
+  assert location.domains == ['cpe-75-82-84-171.socal.res.rr.com']
+  assert location.autonomousSystem == {
+    'asn': 20001,
+    'name': 'Charter Communications (20001)',
+    'route': '75.82.0.0/15',
+    'domain': 'https://www.spectrum.com',
+    'type': 'Cable/DSL/ISP'
+  }
+  assert location.isp == 'Charter Communications'
+  assert not location.proxy
+  assert not location.vpn
+  assert not location.tor
+
+def test_postal_code_requestToLocation():
+  location = requestToLocation(
+    {
+      'ip': '0.0.0.0',
+      'location': {
+        'country': 'US',
+        'region': 'California',
+        'city': 'Westlake Village',
+        'lat': 34.14584,
+        'lng': -118.80565,
         'postalCode': '',
         'timezone': '-08:00',
         'geonameId': 5408395
@@ -190,6 +237,52 @@ def test_requestToLocation():
   assert location.postalCode is None
   assert location.timeZone == '-08:00'
   assert location.domains == ['cpe-75-82-84-171.socal.res.rr.com']
+  assert location.autonomousSystem == {
+    'asn': 20001,
+    'name': 'Charter Communications (20001)',
+    'route': '75.82.0.0/15',
+    'domain': 'https://www.spectrum.com',
+    'type': 'Cable/DSL/ISP'
+  }
+  assert location.isp == 'Charter Communications'
+  assert not location.proxy
+  assert not location.vpn
+  assert not location.tor
+
+def test_domains_requestToLocation():
+  location = requestToLocation(
+    {
+      'ip': '0.0.0.0',
+      'location': {
+        'country': 'US',
+        'region': 'California',
+        'city': 'Westlake Village',
+        'lat': 34.14584,
+        'lng': -118.80565,
+        'postalCode': '',
+        'timezone': '-08:00',
+        'geonameId': 5408395
+      },
+      'as': {
+        'asn': 20001,
+        'name': 'Charter Communications (20001)',
+        'route': '75.82.0.0/15',
+        'domain': 'https://www.spectrum.com',
+        'type': 'Cable/DSL/ISP'
+      },
+      'isp': 'Charter Communications',
+      'proxy': { 'proxy': False, 'vpn': False, 'tor': False }
+    }
+  )
+  assert location.ip == '0.0.0.0'
+  assert location.country == 'US'
+  assert location.region == 'California'
+  assert location.city == 'Westlake Village'
+  assert location.latitude == 34.14584
+  assert location.longitude == -118.80565
+  assert location.postalCode is None
+  assert location.timeZone == '-08:00'
+  assert location.domains is None
   assert location.autonomousSystem == {
     'asn': 20001,
     'name': 'Charter Communications (20001)',

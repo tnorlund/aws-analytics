@@ -143,7 +143,7 @@ class Location:
       'Longitude': { 'N': str( self.longitude ) },
       'PostalCode': objectToItemAtr( self.postalCode ),
       'TimeZone': { 'S': self.timeZone },
-      'Domains': { 'SS': self.domains },
+      'Domains': objectToItemAtr( self.domains ),
       'AutonomousSystem': objectToItemAtr( self.autonomousSystem ),
       'ISP': { 'S': self.isp },
       'Proxy': { 'BOOL': self.proxy },
@@ -199,7 +199,8 @@ def requestToLocation( req ):
       req['ip'], req['location']['country'], req['location']['region'],
       req['location']['city'], req['location']['lat'], req['location']['lng'],
       req['location']['postalCode'], req['location']['timezone'],
-      req['domains'], req['as'] if 'as' in req else None, req['isp'],
+      None if 'domains' not in req.keys() else req['domains'],
+      req['as'] if 'as' in req else None, req['isp'],
       req['proxy']['proxy'], req['proxy']['vpn'], req['proxy']['tor']
     )
   except KeyError as e:
@@ -230,7 +231,8 @@ def itemToLocation( item ):
       item['City']['S'], float( item['Latitude']['N'] ),
       float( item['Longitude']['N'] ),
       None if 'NULL' in item['PostalCode'].keys() else item['PostalCode']['S'],
-      item['TimeZone']['S'], item['Domains']['SS'],
+      item['TimeZone']['S'],
+      None if 'NULL' in item['Domains'].keys() else item['Domains']['SS'],
       {
         **{
           key: int( value['N'] )

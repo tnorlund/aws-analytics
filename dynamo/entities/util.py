@@ -1,3 +1,5 @@
+import re
+
 def formatDate( date ):
   '''Formats a datetime object to a string like JS's ISO standard.
 
@@ -27,6 +29,23 @@ def objectToItemAtr( obj ):
   result : dict
     The DynamoDB syntax of the object.
   '''
+  atr = _objectToItemAtr_singleton( obj )
+  if atr is not None:
+    return atr
+  if isinstance( obj, dict ):
+    return { 'M': {
+      key: objectToItemAtr( value )
+      for key, value in obj.items()
+    } }
+  atr = _objectToItemAtr_list( obj )
+  if atr is not None:
+    return atr
+  if obj is None:
+    return { 'NULL': True }
+  raise Exception( 'Could not parse attribute: ', obj )
+
+def _objectToItemAtr_singleton( obj ):
+  '''Formats strings, numbers, and booleans into DynamoDB syntax.'''
   if isinstance( obj, str ):
     if obj == 'None':
       return { 'NULL': True }
@@ -35,14 +54,16 @@ def objectToItemAtr( obj ):
     return { 'N': str( obj ) }
   if isinstance( obj, bool ):
     return { 'BOOL': obj }
-  if isinstance( obj, dict ):
-    return { 'M': {
-      key: objectToItemAtr( value )
-      for key, value in obj.items()
-    } }
-  if obj is None:
-    return { 'NULL': True }
-  raise Exception( 'Could not parse attribute: ', obj )
+  return None
+
+def _objectToItemAtr_list( obj ):
+  '''Formats lists into DynamoDB syntax.'''
+  if isinstance( obj, list ) and \
+    all( [re.match( r'[\d\.]+', num ) for num in obj] ):
+    return { 'NS': [ str( num ) for num in obj ] }
+  if isinstance( obj, list ):
+    return { 'SS': obj }
+  return None
 
 class toItemException( Exception ):
   '''Exception raised for errors parsing a DynamoDB item to its respective
