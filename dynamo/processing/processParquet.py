@@ -48,21 +48,38 @@ def processParquet( key, dynamo_client, s3_client ):
         _createNewVisitor(
           ip, visitor_dict['browsers'], visitor_dict['visits'], dynamo_client
         )
-      # Otherwise, determine whether to add a new session or update the
-      # visitor's last session.
+      # Otherwise, determine whether to add a new session, update a visitor's
+      # session, or combine multiple sessions.
       else:
-        # Calculate the end datetime of the visitor's last session. This is the
-        # session's starting datetime plus the total time of the session.
-        lastSession = visitor_details['sessions'][-1]
-        lastSessionEnd = lastSession.sessionStart + \
-          datetime.timedelta( seconds=lastSession.totalTime )
-        # Update the session to include these visits when the time between the
-        # end of the last session and the first visit is less than 30 minutes.
-        if ( visitor_dict['visits'][0].date - lastSessionEnd ).days < 1 \
-          and (
-            visitor_dict['visits'][0].date - lastSessionEnd
-        ).seconds/3600 < 0.5:
-          _updateSession( lastSession, visitor_dict['visits'], dynamo_client )
+        # Calculate the time deltas of the different sessions and the visitor's
+        # first visit.
+        time_deltas = [
+          (
+            visitor_dict['visits'][0].date - \
+            session.sessionStart + \
+            datetime.timedelta( seconds=session.totalTime )
+          )
+          for session in visitor_details['sessions']
+        ]
+        # Find all sessions that have the timedelta of less than 30 minutes on
+        # the same day.
+        sessions_to_update = [
+          visitor_details['sessions'][index]
+          for index in range( len( time_deltas ) )
+          if time_deltas[index].days < 1 and time_deltas[index].days >= 0
+          and time_deltas[index].seconds / ( 60 * 60 ) < 0.5
+          and time_deltas[index].seconds > 0
+        ]
+        # Update the visitor's session when only 1 session is found to be
+        # within the timedelta.
+        if len( sessions_to_update ) == 1:
+          _updateSession(
+            sessions_to_update[0], visitor_dict['visits'], dynamo_client
+          )
+        elif len( sessions_to_update ) > 1:
+          _updateSessions(
+            sessions_to_update, visitor_dict['visits'], dynamo_client
+          )
         # Create a new session when the time between the last session and the
         # first of these visits is greater than 30 minutes.
         else:
@@ -143,8 +160,58 @@ def _addSessionToVisitor( ip, visits, browsers, dynamo_client ):
     print( 'ERROR _addSessionToVisitor ' + result['error'] )
   return result
 
+def _updateSessions( oldSessions, visits, dynamo_client ):
+  '''Updates multiple sessions and visits to be a single session.
+
+  Parameters
+  ----------
+  oldSessions : list[ Session ]
+    The old sessions that have been found to be close enough to be combined
+    into a single session.
+  visits : list[ Visit ]
+    The visits found in the '.parquet' file. These are combined with the visits
+    in the other sessions.
+  dynamo_client : DynamoClient
+    The DynamoDB client used to access the table.
+
+  Returns
+  -------
+  result : dict
+    The result of combining the sessions and updating the visits in the table.
+    These could be the updated session and visits or the error that occurred
+    while accessing the table.
+  '''
+  # Create a list of all of the visits from the old sessions.
+  old_visits = []
+  for session in oldSessions:
+    session_details = dynamo_client.getSessionDetails( session )
+    if 'error' in session_details.keys():
+      return { 'error': session_details['error'] }
+    old_visits += session_details['visits']
+  # Remove the unnecessary sessions from the table.
+  for session in oldSessions[1:]:
+    dynamo_client.removeSession( session )
+  # The visits must be combined and assigned the correct attributes before
+  # adding them to the table. Combine the previous visits with the ones in the
+  # last session and reassign their attributes.
+  combined_visits = processVisits( visits + old_visits )
+  # Update the previous session to have the attributes with the new
+  # visits.
+  oldSessions[0].avgTime = np.mean( [
+    visit.timeOnPage for visit in combined_visits
+    if isinstance( visit.timeOnPage, float )
+  ] )
+  oldSessions[0].totalTime = (
+    combined_visits[-1].date - combined_visits[0].date
+  ).total_seconds()
+  # Add the updated session and visits to the table.
+  result = dynamo_client.updateSession( oldSessions[0], combined_visits )
+  if 'error' in result.keys():
+    print( 'ERROR _updateSession ' + result['error'] )
+  return result
+
 def _updateSession( lastSession, visits, dynamo_client ):
-  '''Updates the latest session with the visits in this '.parquet' file.
+  '''Updates the latest session with recent visits.
 
   Parameters
   ----------
@@ -163,22 +230,26 @@ def _updateSession( lastSession, visits, dynamo_client ):
     The result of adding the updated session to the table. This could be the
     updated session or the error that occurs while updating the session.
   '''
-  result = dynamo_client.getSessionDetails( lastSession )
-  if 'error' in result.keys():
-    return { 'error': result['error'] }
-  # Combine the previous visits and the ones in this S3 PUT
-  visits = processVisits( visits + result['visits'] )
+  session_details = dynamo_client.getSessionDetails( lastSession )
+  if 'error' in session_details.keys():
+    return { 'error': session_details['error'] }
+  # The visits must be combined and assigned the correct attributes before
+  # adding them to the table. Combine the previous visits with the ones in the
+  # last session and reassign their attributes.
+  combined_visits = processVisits( visits + session_details['visits'] )
   # Update the previous session to have the attributes with the new
   # visits.
-  result['session'].avgTime = np.mean( [
-    visit.timeOnPage for visit in visits
+  session_details['session'].avgTime = np.mean( [
+    visit.timeOnPage for visit in combined_visits
     if isinstance( visit.timeOnPage, float )
   ] )
-  result['session'].totalTime = (
-    visits[-1].date - visits[0].date
+  session_details['session'].totalTime = (
+    combined_visits[-1].date - combined_visits[0].date
   ).total_seconds()
   # Add the updated session and visits to the table.
-  result = dynamo_client.updateSession( result['session'], visits )
+  result = dynamo_client.updateSession(
+    session_details['session'], combined_visits
+  )
   if 'error' in result.keys():
     print( 'ERROR _updateSession ' + result['error'] )
   return result
