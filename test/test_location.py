@@ -187,7 +187,7 @@ def test_requestToLocation():
   assert location.city == 'Westlake Village'
   assert location.latitude == 34.14584
   assert location.longitude == -118.80565
-  assert location.postalCode == ''
+  assert location.postalCode is None
   assert location.timeZone == '-08:00'
   assert location.domains == ['cpe-75-82-84-171.socal.res.rr.com']
   assert location.autonomousSystem == {
@@ -210,7 +210,12 @@ def test_exception_requestToLocation():
 def test_itemToLocation():
   location = Location(
     '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
-    -118.819444, '91361', '-08:00', ['cpe-75-82-84-171.socal.res.rr.com'], {
+    -118.819444, None, '-08:00',
+    [
+      'cpe-75-82-84-171.socal.res.rr.com',
+      '75-140-17-78.static.rvsd.ca.charter.com'
+    ],
+    {
       'asn': 20001,
       'name': 'Charter Communications (20001)',
       'route': '75.82.0.0/15',

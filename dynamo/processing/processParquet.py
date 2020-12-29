@@ -57,7 +57,9 @@ def processParquet( key, dynamo_client, s3_client ):
           (
             visitor_dict['visits'][0].date - \
             session.sessionStart + \
-            datetime.timedelta( seconds=session.totalTime )
+            datetime.timedelta( seconds=session.totalTime ) \
+              if session.totalTime is not None \
+              else visitor_dict['visits'][0].date - session.sessionStart
           )
           for session in visitor_details['sessions']
         ]

@@ -94,7 +94,7 @@ class Location:
     self.city = city
     self.latitude = latitude
     self.longitude = longitude
-    self.postalCode = postalCode
+    self.postalCode = postalCode if postalCode != '' else None
     self.timeZone = timezone
     self.domains = domains
     self.autonomousSystem = autonomousSystem
@@ -141,7 +141,7 @@ class Location:
       'City': { 'S': self.city },
       'Latitude': { 'N': str( self.latitude ) },
       'Longitude': { 'N': str( self.longitude ) },
-      'PostalCode': { 'S': self.postalCode },
+      'PostalCode': objectToItemAtr( self.postalCode ),
       'TimeZone': { 'S': self.timeZone },
       'Domains': { 'SS': self.domains },
       'AutonomousSystem': objectToItemAtr( self.autonomousSystem ),
@@ -228,7 +228,8 @@ def itemToLocation( item ):
     return Location(
       item['PK']['S'].split('#')[1], item['Country']['S'], item['Region']['S'],
       item['City']['S'], float( item['Latitude']['N'] ),
-      float( item['Longitude']['N'] ), item['PostalCode']['S'],
+      float( item['Longitude']['N'] ),
+      None if 'NULL' in item['PostalCode'].keys() else item['PostalCode']['S'],
       item['TimeZone']['S'], item['Domains']['SS'],
       {
         **{
