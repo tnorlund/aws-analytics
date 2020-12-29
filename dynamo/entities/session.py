@@ -1,5 +1,5 @@
 import datetime
-from .util import formatDate, toItemException
+from .util import formatDate, toItemException, objectToItemAtr
 
 class Session:
   """A class to represent a visitor's session item for DynamoDB.
@@ -54,8 +54,8 @@ class Session:
         sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ'
       )
     self.ip = ip
-    self.avgTime = float( avgTime )
-    self.totalTime = float( totalTime )
+    self.avgTime = float( avgTime ) if avgTime is not None else avgTime
+    self.totalTime = float( totalTime ) if totalTime is not None else totalTime
 
   def key( self ):
     '''Returns the Primary Key of the session.
@@ -109,8 +109,8 @@ class Session:
       **self.key(),
       **self.gsi2(),
       'Type': { 'S': 'session' },
-      'AverageTime': { 'N': str( self.avgTime ) },
-      'TotalTime': { 'N': str( self.totalTime ) }
+      'AverageTime': objectToItemAtr( self.avgTime ),
+      'TotalTime': objectToItemAtr( self.totalTime )
     }
 
   def __repr__( self ):

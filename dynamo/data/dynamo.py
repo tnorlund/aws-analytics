@@ -14,6 +14,23 @@ from dynamo.entities import itemToVisit, itemToSession # pylint: disable=wrong-i
 from dynamo.entities import itemToYear, itemToMonth, itemToWeek, itemToDay # pylint: disable=wrong-import-position
 from dynamo.entities import itemToPage # pylint: disable=wrong-import-position
 
+def _chunkList( this_list, size ):
+  '''Splits a list into a list of lists.
+
+  Parameters
+  ----------
+  this_list : list
+    The list to be split into different lists.
+  size : int
+    The size of the sublists
+
+  Returns
+  -------
+    An iterable that iterates over the sublists.
+  '''
+  for i in range( 0, len( this_list ), size ):
+    yield this_list[i:i + size]
+
 def _pagesToDict( pages ):
   '''Converts a list of pages to a dict of ratios.
 
@@ -134,13 +151,23 @@ class DynamoClient( _Visitor, _Location ):
     if any( not isinstance( visit, Visit ) for visit in visits ):
       raise ValueError( 'Must pass Visit objects' )
     try:
-      self.client.batch_write_item(
-        RequestItems = {
-          self.tableName: [
-            { 'PutRequest': { 'Item': visit.toItem() } }
-            for visit in visits
-          ] },
-      )
+      if len( visits ) > 25:
+        for sub_visits in _chunkList( visits, 25 ):
+          self.client.batch_write_item(
+            RequestItems = {
+              self.tableName: [
+                { 'PutRequest': { 'Item': visit.toItem() } }
+                for visit in sub_visits
+              ] },
+          )
+      else:
+        self.client.batch_write_item(
+          RequestItems = {
+            self.tableName: [
+              { 'PutRequest': { 'Item': visit.toItem() } }
+              for visit in visits
+            ] },
+        )
       return { 'visits': visits }
     except ClientError as e:
       print( f'ERROR addVisits: { e }')
@@ -319,15 +346,27 @@ class DynamoClient( _Visitor, _Location ):
     result = self.addBrowsers( browsers )
     if 'error' in result.keys():
       return { 'error': result['error'] }
+    # Get all of the seconds per page visit that exist.
     pageTimes = [
       visit.timeOnPage for visit in visits
       if isinstance( visit.timeOnPage, float )
     ]
+    # Calculate the average time the visitor spent on the pages. When there are
+    # no page times, there is no average time.
+    if len( pageTimes ) == 1:
+      averageTime = pageTimes[0]
+    elif len( pageTimes ) > 1:
+      averageTime = np.mean( pageTimes )
+    else:
+      averageTime = None
+    # Calculate the total time spent in this session. When there is only one
+    # visit, there is no total time.
+    if len( visits ) == 1:
+      totalTime = None
+    else:
+      totalTime = ( visits[-1].date - visits[0].date ).total_seconds()
     session = Session(
-      visits[0].date,
-      visits[0].ip,
-      np.mean( pageTimes ) if len( pageTimes ) > 1 else pageTimes[0],
-      ( visits[-1].date - visits[0].date ).total_seconds()
+      visits[0].date, visits[0].ip, averageTime, totalTime
     )
     result = self.addSession( session )
     if 'error' in result.keys():
