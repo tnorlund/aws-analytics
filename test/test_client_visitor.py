@@ -1,5 +1,6 @@
 import pytest
 from dynamo.data import DynamoClient
+from ._location import location
 
 @pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
 def test_addVisitor( table_name, visitor ):
@@ -75,18 +76,18 @@ def test_parameter_incrementVisitorSessions( table_name ):
 
 @pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
 def test_addNewVisitor(
-  table_name, visitor, browsers, visits, session, location
+  table_name, visitor, browsers, visits, session
 ):
   client = DynamoClient( table_name )
   result = client.addNewVisitor(
-    visitor, location, browsers, visits
+    visitor, location(), browsers, visits
   )
   assert 'visitor' in result.keys()
   assert result['visitor'] == visitor
   assert 'browsers' in result.keys()
   assert result['browsers'] == browsers
   assert 'location' in result.keys()
-  assert result['location'] == location
+  assert dict( result['location'] ) == dict( location() )
   assert 'visits' in result.keys()
   assert result['visits'] == visits
   assert 'session' in result.keys()
@@ -94,37 +95,37 @@ def test_addNewVisitor(
 
 @pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
 def test_duplicate_visitor_addNewVisitor(
-  table_name, visitor, browsers, visits, location
+  table_name, visitor, browsers, visits
 ):
   client = DynamoClient( table_name )
   result = client.addVisitor( visitor )
   result = client.addNewVisitor(
-    visitor, location, browsers, visits
+    visitor, location(), browsers, visits
   )
   assert 'error' in result.keys()
   assert result['error'] == f'Visitor already in table { visitor }'
 
 @pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
 def test_duplicate_location_addNewVisitor(
-  table_name, visitor, browsers, visits, location
+  table_name, visitor, browsers, visits
 ):
   client = DynamoClient( table_name )
-  result = client.addLocation( location )
+  result = client.addLocation( location() )
   result = client.addNewVisitor(
-    visitor, location, browsers, visits
+    visitor, location(), browsers, visits
   )
   assert 'error' in result.keys()
   assert result['error'] == 'Visitor\'s location is already in table ' + \
-    f'{ location }'
+    f'{ location() }'
 
 @pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
 def test_duplicate_session_addNewVisitor(
-  table_name, visitor, browsers, visits, location, session
+  table_name, visitor, browsers, visits, session
 ):
   client = DynamoClient( table_name )
   result = client.addSession( session )
   result = client.addNewVisitor(
-    visitor, location, browsers, visits
+    visitor, location(), browsers, visits
   )
   assert 'error' in result.keys()
   assert result['error'] == 'Visitor\'s session is already in table ' + \
@@ -132,13 +133,16 @@ def test_duplicate_session_addNewVisitor(
 
 @pytest.mark.usefixtures( 'dynamo_client', 'table_init' )
 def test_getVisitorDetails(
-  table_name, visitor, browsers, visits, location
+  table_name, visitor, browsers, visits
 ):
+  print( 'location', location() )
   client = DynamoClient( table_name )
-  client.addNewVisitor(
-    visitor, location, browsers, visits
+  result = client.addNewVisitor(
+    visitor, location(), browsers, visits
   )
+  print( 'result', result )
   result = client.getVisitorDetails( visitor )
+  print( 'result', result )
   assert 'visitor' in result.keys()
   assert dict( result['visitor'] ) == dict( visitor )
   assert 'browsers' in result.keys()
@@ -147,7 +151,7 @@ def test_getVisitorDetails(
     for index in range( len( browsers ) )
   ] )
   assert 'location' in result.keys()
-  assert dict( result['location'] ) == dict( location )
+  assert dict( result['location'] ) == dict( location() )
   assert 'visits' in result.keys()
   assert all( [
     dict( result['visits'][index] ) == dict(visits[index])

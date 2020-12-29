@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.entities import Location # pylint: disable=wrong-import-position
+from dynamo.entities import Location, itemToLocation # pylint: disable=wrong-import-position
 
 class _Location:
   def addLocation( self, location ):
@@ -64,3 +64,49 @@ class _Location:
       if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
         return { 'error': f'Location not in table { location }' }
       return { 'error': 'Could not remove location from table' }
+
+  def listLocations( self ):
+    '''Lists all locations in the table.
+
+    Returns
+    -------
+    locations : list[ Location ]
+      The list of locations from the table.
+    '''
+    # Use a list to store the locations returned from the table.
+    locations = []
+    try:
+      result = self.client.scan(
+        TableName = self.tableName,
+        ScanFilter = {
+          'Type': {
+          'AttributeValueList': [ { 'S': 'location' } ],
+          'ComparisonOperator': 'EQ'
+          }
+        }
+      )
+      for item in result['Items']:
+        locations.append( itemToLocation( item ) )
+      # DynamoDB is limited in 1MB of query results. Continue to query from the
+      # 'LastEvaluatedKey' when this condition is met.
+      if 'LastEvaluatedKey' in result.keys():
+        still_querying = True
+        while still_querying:
+          result = self.client.scan(
+            TableName = self.tableName,
+            ScanFilter = {
+              'Type': {
+              'AttributeValueList': [ { 'S': 'location' } ],
+              'ComparisonOperator': 'EQ'
+              }
+            },
+            ExclusiveStartKey = result['LastEvaluatedKey']
+          )
+          for item in result['Items']:
+            locations.append( itemToLocation( item ) )
+          if 'LastEvaluatedKey' not in result.keys():
+            still_querying = False
+      return locations
+    except ClientError as e:
+      print( f'ERROR listLocations: { e }' )
+      return { 'error': 'Could not get visits from table' }

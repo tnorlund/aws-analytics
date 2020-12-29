@@ -4,7 +4,7 @@ import boto3
 import pytest
 
 from moto import mock_dynamodb2, mock_s3
-from dynamo.entities import Visitor, Browser, Visit, Session, Location, Page
+from dynamo.entities import Visitor, Browser, Visit, Session, Page
 
 @pytest.fixture
 def aws_credentials():
@@ -110,22 +110,6 @@ def ip():
 def visitor():
   '''A proper Visit object.'''
   return Visitor( '0.0.0.0' )
-
-@pytest.fixture
-def location():
-  '''A proper Location object.'''
-  return Location(
-    '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
-    -118.819444, '91361', '-08:00', ['cpe-75-82-84-171.socal.res.rr.com'],
-    {
-      'asn': 20001,
-      'name': 'Charter Communications (20001)',
-      'route': '75.82.0.0/15',
-      'domain': 'https://www.spectrum.com',
-      'type': 'Cable/DSL/ISP'
-    },
-    'Charter Communications', False, False, False, '2020-01-01T00:00:00.000Z'
-  )
 
 @pytest.fixture
 def browsers():
