@@ -1,5 +1,11 @@
+import os
+import sys
 import numpy as np
 import pandas as pd
+sys.path.append(
+  os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
+)
+from dynamo.entities import Visit, Browser # pylint: disable=wrong-import-position
 
 def processDF( df, ip ):
   '''Cleans the given dataframe to only have the data of the given IP address.
