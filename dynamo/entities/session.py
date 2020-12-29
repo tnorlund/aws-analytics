@@ -145,8 +145,10 @@ def itemToSession( item ):
       datetime.datetime.strptime(
         item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
       ), item['PK']['S'].split('#')[1],
-      float( item['AverageTime']['N'] ),
-      float( item['TotalTime']['N'] )
+      None if 'NULL' in item['AverageTime'].keys() \
+        else float( item['AverageTime']['N'] ),
+      None if 'NULL' in item['TotalTime'].keys() \
+        else float( item['TotalTime']['N'] )
     )
   except KeyError as e:
     print( f'ERROR itemToSession: {e}' )
