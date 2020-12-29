@@ -8,51 +8,17 @@ sys.path.append(
 )
 from dynamo.data._visitor import _Visitor # pylint: disable=wrong-import-position
 from dynamo.data._location import _Location # pylint: disable=wrong-import-position
-from dynamo.entities import Visit, Session, Browser # pylint: disable=wrong-import-position
+from dynamo.data._session import _Session # pylint: disable=wrong-import-position
+from dynamo.data._visit import _Visit # pylint: disable=wrong-import-position
+from dynamo.data._browser import _Browser # pylint: disable=wrong-import-position
+from dynamo.entities import Visit # pylint: disable=wrong-import-position
 from dynamo.entities import Year, Month, Week, Day, Page # pylint: disable=wrong-import-position
-from dynamo.entities import itemToVisit, itemToSession # pylint: disable=wrong-import-position
+from dynamo.entities import itemToVisit # pylint: disable=wrong-import-position
 from dynamo.entities import itemToYear, itemToMonth, itemToWeek, itemToDay # pylint: disable=wrong-import-position
 from dynamo.entities import itemToPage # pylint: disable=wrong-import-position
+from dynamo.data.util import pagesToDict # pylint: disable=wrong-import-position
 
-def _chunkList( this_list, size ):
-  '''Splits a list into a list of lists.
-
-  Parameters
-  ----------
-  this_list : list
-    The list to be split into different lists.
-  size : int
-    The size of the sublists
-
-  Returns
-  -------
-    An iterable that iterates over the sublists.
-  '''
-  for i in range( 0, len( this_list ), size ):
-    yield this_list[i:i + size]
-
-def _pagesToDict( pages ):
-  '''Converts a list of pages to a dict of ratios.
-
-  Parameters
-  ----------
-  pages : list[ str ]
-    The list of page visits from other pages or to other pages.
-
-  Returns
-  -------
-  result : dict
-    The ratios of the page visits where the keys are the page slugs and the
-    values are the ratios relative to the list of page visits.
-  '''
-  return {
-    (
-      'www' if page is None else page
-    ): pages.count( page ) / len( pages )
-    for page in list( set( pages ) )
-  }
-
-class DynamoClient( _Visitor, _Location ):
+class DynamoClient( _Visitor, _Location, _Session, _Visit, _Browser ):
   '''A class to represent the DynamoDB client.
 
   Attributes
@@ -74,401 +40,6 @@ class DynamoClient( _Visitor, _Location ):
     '''
     self.client = boto3.client( 'dynamodb', region_name = regionName )
     self.tableName = tableName
-
-  def addVisit( self, visit ):
-    '''Adds a visitor's page visit to the table.
-
-    Parameters
-    ----------
-    visit : Visit
-      The visitor's page visit to be added to the table.
-
-    Returns
-    -------
-    result : dict
-      The result of adding a visitor's page visit to the table.
-    '''
-    if not isinstance( visit, Visit ):
-      raise ValueError( 'Must pass a Visit object' )
-    try:
-      self.client.put_item(
-        TableName = self.tableName,
-        Item = visit.toItem(),
-        ConditionExpression = 'attribute_not_exists(PK)'
-      )
-      return { 'visit': visit }
-    except ClientError as e:
-      print( f'ERROR addVisit: { e }')
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return {
-          'error': f'Visitor\'s page visit is already in table { visit }'
-        }
-      return { 'error': 'Could not add new page visit to table' }
-
-  def removeVisit( self, visit ):
-    '''Removes a visit from the table.
-
-    Parameters
-    ----------
-    visit : Visit
-      The visit to be removed from the table.
-
-    Returns
-    -------
-    result : dict
-      The result of removing the visit from the table.
-    '''
-    if not isinstance( visit, Visit ):
-      raise ValueError( 'Must pass a Visit object' )
-    try:
-      self.client.delete_item(
-        TableName = self.tableName,
-        Key = visit.key(),
-        ConditionExpression = 'attribute_exists(PK)'
-      )
-      return { 'visit': visit }
-    except ClientError as e:
-      print( f'ERROR removeVisit: { e }' )
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return { 'error': f'Visit not in table { visit }' }
-      return { 'error': 'Could not remove visit from table' }
-
-  def addVisits( self, visits ):
-    '''Adds a visitor's page visit to the table.
-
-    Parameters
-    ----------
-    visits : list[ Visit ]
-      The visitor's page visits to be added to the table.
-
-    Returns
-    -------
-    result : dict
-      The result of adding a visitor's page visits to the table.
-    '''
-    if not isinstance( visits, list ):
-      raise ValueError( 'Must pass a list' )
-    if any( not isinstance( visit, Visit ) for visit in visits ):
-      raise ValueError( 'Must pass Visit objects' )
-    try:
-      if len( visits ) > 25:
-        for sub_visits in _chunkList( visits, 25 ):
-          self.client.batch_write_item(
-            RequestItems = {
-              self.tableName: [
-                { 'PutRequest': { 'Item': visit.toItem() } }
-                for visit in sub_visits
-              ] },
-          )
-      else:
-        self.client.batch_write_item(
-          RequestItems = {
-            self.tableName: [
-              { 'PutRequest': { 'Item': visit.toItem() } }
-              for visit in visits
-            ] },
-        )
-      return { 'visits': visits }
-    except ClientError as e:
-      print( f'ERROR addVisits: { e }')
-      return { 'error': 'Could not add new page visits to table' }
-
-  def addSession( self, session ):
-    '''Adds a visitor's session to the table.
-
-    Parameters
-    ----------
-    session : Session
-      The visitor's session to be added to the table.
-
-    Returns
-    -------
-    result : dict
-      The result of adding a visitor's session to the table.
-    '''
-    if not isinstance( session, Session ):
-      raise ValueError( 'Must pass a Session object' )
-    try:
-      self.client.put_item(
-        TableName = self.tableName,
-        Item = session.toItem(),
-        ConditionExpression = 'attribute_not_exists(PK)'
-      )
-      return { 'session': session }
-    except ClientError as e:
-      print( f'ERROR addsession: { e }')
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return {
-          'error': f'Visitor\'s session is already in table { session }'
-        }
-      return { 'error': 'Could not add new page visit to table' }
-
-  def removeSession( self, session ):
-    '''Removes a session from the table.
-
-    Parameters
-    ----------
-    session : Session
-      The visit to be removed from the table.
-
-    Returns
-    -------
-    result : dict
-      The result of removing the session from the table.
-    '''
-    if not isinstance( session, Session ):
-      raise ValueError( 'Must pass a Session object' )
-    try:
-      self.client.delete_item(
-        TableName = self.tableName,
-        Key = session.key(),
-        ConditionExpression = 'attribute_exists(PK)'
-      )
-      return { 'session': session }
-    except ClientError as e:
-      print( f'ERROR removeSession: { e }' )
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return { 'error': f'Session not in table { session }' }
-      return { 'error': 'Could not remove session from table' }
-
-  def addBrowser( self, browser ):
-    '''Adds a browser to the table.
-
-    Parameters
-    ----------
-    browser : Browser
-      The visitor's browser to be added to the table.
-
-    Returns
-    -------
-    result : dict
-      The result of adding a visitor's browser to the table.
-    '''
-    if not isinstance( browser, Browser ):
-      raise ValueError( 'Must pass a Browser object' )
-    try:
-      self.client.put_item(
-        TableName = self.tableName,
-        Item = browser.toItem(),
-        ConditionExpression = 'attribute_not_exists(PK)'
-      )
-      return { 'browser': browser }
-    except ClientError as e:
-      print( f'ERROR addBrowser: { e }')
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return {
-          'error': f'Visitor\'s browser is already in table { browser }'
-        }
-      return { 'error': 'Could not add new browser to table' }
-
-  def removeBrowser( self, browser ):
-    '''Removes a browser from the table.
-
-    Parameters
-    ----------
-    browser : Browser
-      The browser to be removed from the table.
-
-    Returns
-    -------
-    result : dict
-      The result of removing the browser from the table.
-    '''
-    if not isinstance( browser, Browser ):
-      raise ValueError( 'Must pass a Browser object' )
-    try:
-      self.client.delete_item(
-        TableName = self.tableName,
-        Key = browser.key(),
-        ConditionExpression = 'attribute_exists(PK)'
-      )
-      return { 'browser': browser }
-    except ClientError as e:
-      print( f'ERROR removeBrowser: { e }' )
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return { 'error': f'Browser not in table { browser }' }
-      return { 'error': 'Could not remove browser from table' }
-
-  def addBrowsers( self, browsers ):
-    '''Adds browsers to the table.
-
-    Parameters
-    ----------
-    browsers : list[ Browser ]
-      The browsers to be added to the table.
-
-    Returns
-    -------
-    result : dict
-      The result of adding browsers to the table.
-    '''
-    if not isinstance( browsers, list ):
-      raise ValueError( 'Must pass a list' )
-    if any( not isinstance( browser, Browser ) for browser in browsers ):
-      raise ValueError( 'Must pass Browser objects' )
-    try:
-      self.client.batch_write_item(
-        RequestItems = {
-          self.tableName: [
-            { 'PutRequest': { 'Item': browser.toItem() } }
-            for browser in browsers
-          ] },
-      )
-      return { 'browsers': browsers }
-    except ClientError as e:
-      print( f'ERROR addBrowsers: { e }')
-      return { 'error': 'Could not add new browsers to table' }
-
-  def addNewSession( self, visitor, browsers, visits ):
-    '''Adds a new session to the table for the given visitor.
-
-    Parameters
-    ----------
-    visitor : Visitor
-      The returning visitor. They will have their number of sessions
-      incremented.
-    browsers : list[ Browser ]
-      The visitor's browsers to be added to the table.
-    visits: list[ Visit ]
-      The visits to be added to the table.
-
-    Returns
-    -------
-    result : dict
-      The result of adding a new session for a visitor. This could be either
-      the error that occurs or the updated visitor, the browsers added, and the
-      visits added to the table.
-    '''
-    result = self.incrementVisitorSessions( visitor )
-    if 'error' in result.keys():
-      return { 'error': result['error'] }
-    visitor = result['visitor']
-    result = self.addBrowsers( browsers )
-    if 'error' in result.keys():
-      return { 'error': result['error'] }
-    # Get all of the seconds per page visit that exist.
-    pageTimes = [
-      visit.timeOnPage for visit in visits
-      if isinstance( visit.timeOnPage, float )
-    ]
-    # Calculate the average time the visitor spent on the pages. When there are
-    # no page times, there is no average time.
-    if len( pageTimes ) == 1:
-      averageTime = pageTimes[0]
-    elif len( pageTimes ) > 1:
-      averageTime = np.mean( pageTimes )
-    else:
-      averageTime = None
-    # Calculate the total time spent in this session. When there is only one
-    # visit, there is no total time.
-    if len( visits ) == 1:
-      totalTime = None
-    else:
-      totalTime = ( visits[-1].date - visits[0].date ).total_seconds()
-    session = Session(
-      visits[0].date, visits[0].ip, averageTime, totalTime
-    )
-    result = self.addSession( session )
-    if 'error' in result.keys():
-      return { 'error': result['error'] }
-    result = self.addVisits( visits )
-    if 'error' in result.keys():
-      return { 'error': result['error'] }
-    return {
-      'visitor': visitor, 'browsers': browsers, 'visits': visits,
-      'session': session
-    }
-
-  def getSessionDetails( self, session ):
-    '''Gets the session and visits from the table.
-
-    Parameters
-    ----------
-    session : Session
-      The session requested from the table.
-
-    Returns
-    -------
-    data : dict
-      The result of getting the session from the table. This contains either
-      the error that occurred or the session and its visits.
-    '''
-    try:
-      result = self.client.query(
-        TableName = self.tableName,
-        IndexName = 'GSI2',
-        KeyConditionExpression = '#gsi2 = :gsi2',
-        ExpressionAttributeNames = { '#gsi2': 'GSI2PK' },
-        ExpressionAttributeValues = { ':gsi2': session.gsi2pk() },
-        ScanIndexForward = True
-      )
-      if len( result['Items'] ) == 0:
-        return { 'error': 'Session not in table' }
-      data = { 'visits': [] }
-      for item in result['Items']:
-        if item['Type']['S'] == 'visit':
-          data['visits'].append( itemToVisit( item ) )
-        elif item['Type']['S'] == 'session':
-          data['session'] = itemToSession( item )
-      return data
-    except ClientError as e:
-      print( f'ERROR getSessionDetails: { e }')
-      return { 'error': 'Could not get session from table' }
-
-  def updateSession( self, session, visits ):
-    '''Updates a session with new visits and attributes.
-
-    Parameters
-    ----------
-    session : Session
-      The session to change the average time on page and the total time on the
-      website.
-    visits : list[ Visit ]
-      All of the visits that belong to the session.
-    '''
-    if not isinstance( session, Session ):
-      raise ValueError( 'Must pass a Session object')
-    if not isinstance( visits, list ):
-      raise ValueError( 'Must pass a list of Visit objects' )
-    if not all( [
-      isinstance( visit, Visit ) for visit in visits
-    ] ):
-      raise ValueError( 'List of visits must be of Visit type' )
-    # Get all of the seconds per page visit that exist.
-    pageTimes = [
-      visit.timeOnPage for visit in visits
-      if isinstance( visit.timeOnPage, float )
-    ]
-    # Calculate the average time the visitor spent on the pages. When there are
-    # no page times, there is no average time.
-    if len( pageTimes ) == 1:
-      averageTime = pageTimes[0]
-    elif len( pageTimes ) > 1:
-      averageTime = np.mean( pageTimes )
-    else:
-      averageTime = None
-    # Calculate the total time spent in this session. When there is only one
-    # visit, there is no total time.
-    if len( visits ) == 1:
-      totalTime = None
-    else:
-      totalTime = ( visits[-1].date - visits[0].date ).total_seconds()
-    session = Session(
-      visits[0].date, visits[0].ip, averageTime, totalTime
-    )
-    try:
-      self.client.put_item(
-        TableName = self.tableName,
-        Item = session.toItem(),
-        ConditionExpression = 'attribute_exists(PK)'
-      )
-      self.addVisits( visits )
-      return { 'session': session, 'visits': visits }
-    except ClientError as e:
-      print( f'ERROR updateSession: { e }' )
-      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-        return { 'error': f'Session not in table { session }' }
-      return { 'error': 'Could not update session in table' }
 
   def addYear( self, visits ):
     '''Adds a year item to the table.
@@ -506,7 +77,7 @@ class DynamoClient( _Visitor, _Location ):
       averageTime = pageTimes[0]
     else:
       averageTime = None
-    # Create the week object
+    # Create the year object
     year = Year(
       visits[0].slug,
       visits[0].title,
@@ -514,8 +85,8 @@ class DynamoClient( _Visitor, _Location ):
       len( { visit.ip for visit in visits } ),
       averageTime,
       toPages.count( None ) / len( toPages ),
-      _pagesToDict( fromPages ),
-      _pagesToDict( toPages )
+      pagesToDict( fromPages ),
+      pagesToDict( toPages )
     )
     try:
       # Add the year to the table
@@ -562,7 +133,7 @@ class DynamoClient( _Visitor, _Location ):
       averageTime = pageTimes[0]
     else:
       averageTime = None
-    # Create the week object
+    # Create the month object
     month = Month(
       visits[0].slug,
       visits[0].title,
@@ -570,8 +141,8 @@ class DynamoClient( _Visitor, _Location ):
       len( { visit.ip for visit in visits } ),
       averageTime,
       toPages.count( None ) / len( toPages ),
-      _pagesToDict( fromPages ),
-      _pagesToDict( toPages )
+      pagesToDict( fromPages ),
+      pagesToDict( toPages )
     )
     try:
       # Add the month to the table
@@ -626,8 +197,8 @@ class DynamoClient( _Visitor, _Location ):
       len( { visit.ip for visit in visits } ),
       averageTime,
       toPages.count( None ) / len( toPages ),
-      _pagesToDict( fromPages ),
-      _pagesToDict( toPages )
+      pagesToDict( fromPages ),
+      pagesToDict( toPages )
     )
     try:
       # Add the week to the table
@@ -684,8 +255,8 @@ class DynamoClient( _Visitor, _Location ):
       len( { visit.ip for visit in visits } ),
       averageTime,
       toPages.count( None ) / len( toPages ),
-      _pagesToDict( fromPages ),
-      _pagesToDict( toPages )
+      pagesToDict( fromPages ),
+      pagesToDict( toPages )
     )
     try:
       # Add the day to the table
@@ -737,8 +308,8 @@ class DynamoClient( _Visitor, _Location ):
       len( { visit.ip for visit in visits } ),
       averageTime,
       toPages.count( None ) / len( toPages ),
-      _pagesToDict( fromPages ),
-      _pagesToDict( toPages )
+      pagesToDict( fromPages ),
+      pagesToDict( toPages )
     )
     try:
       # Add the page to the table
@@ -862,20 +433,54 @@ class DynamoClient( _Visitor, _Location ):
       data = {
         'visits': [], 'days': [], 'weeks': [], 'months': [], 'years': []
       }
-      for item in result['Items']:
-        if item['Type']['S'] == 'visit':
-          data['visits'].append( itemToVisit( item ) )
-        elif item['Type']['S'] == 'page':
-          data['page'] = itemToPage( item )
-        elif item['Type']['S'] == 'day':
-          data['days'].append( itemToDay( item ) )
-        elif item['Type']['S'] == 'week':
-          data['weeks'].append( itemToWeek( item ) )
-        elif item['Type']['S'] == 'month':
-          data['months'].append( itemToMonth( item ) )
-        elif item['Type']['S'] == 'year':
-          data['years'].append( itemToYear( item ) )
+      data = _parsePageDetails( data, result )
+      # DynamoDB is limited in 1MB of query results. Continue to query from the
+      # 'LastEvaluatedKey' when this condition is met.
+      if 'LastEvaluatedKey' in result.keys():
+        still_querying = True
+        while still_querying:
+          result = self.client.query(
+            TableName = self.tableName,
+            IndexName = 'GSI1',
+            KeyConditionExpression = '#gsi1 = :gsi1',
+            ExpressionAttributeNames = { '#gsi1': 'GSI1PK' },
+            ExpressionAttributeValues = { ':gsi1': page.gsi1pk() },
+            ScanIndexForward = True,
+            ExclusiveStartKey = result['LastEvaluatedKey']
+          )
+          data = _parsePageDetails( data, result )
+          if 'LastEvaluatedKey' not in result.keys():
+            still_querying = False
       return data
     except ClientError as e:
       print( f'ERROR getPageDetails: { e }')
       return { 'error': 'Could not get page from table' }
+
+def _parsePageDetails( data, result ):
+  '''Parses the DynamoDB items to their respective objects.
+
+  Parameters
+  ----------
+  data : dict
+    The parsed data as a dictionary.
+  result : dict
+    The result of the DynamoDB query.
+
+  Returns
+  data : dict
+    The original parsed data combined with the new parsed data.
+  '''
+  for item in result['Items']:
+    if item['Type']['S'] == 'visit':
+      data['visits'].append( itemToVisit( item ) )
+    elif item['Type']['S'] == 'page':
+      data['page'] = itemToPage( item )
+    elif item['Type']['S'] == 'day':
+      data['days'].append( itemToDay( item ) )
+    elif item['Type']['S'] == 'week':
+      data['weeks'].append( itemToWeek( item ) )
+    elif item['Type']['S'] == 'month':
+      data['months'].append( itemToMonth( item ) )
+    elif item['Type']['S'] == 'year':
+      data['years'].append( itemToYear( item ) )
+  return data

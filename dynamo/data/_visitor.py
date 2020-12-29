@@ -189,21 +189,56 @@ class _Visitor:
         ExpressionAttributeValues = { ':pk': visitor.pk() },
         ScanIndexForward = True
       )
+      # Return the error when there are no items returned from the table.
       if len( result['Items'] ) == 0:
         return { 'error': 'Visitor not in table' }
+      # Use a dictionary to store the items returned from the table
       data = { 'visits': [], 'browsers': [], 'sessions': [] }
-      for item in result['Items']:
-        if item['Type']['S'] == 'visitor':
-          data['visitor'] = itemToVisitor( item )
-        elif item['Type']['S'] == 'visit':
-          data['visits'].append( itemToVisit( item ) )
-        elif item['Type']['S'] == 'session':
-          data['sessions'].append( itemToSession( item ) )
-        elif item['Type']['S'] == 'location':
-          data['location'] = itemToLocation( item )
-        elif item['Type']['S'] == 'browser':
-          data['browsers'].append( itemToBrowser( item ) )
+      data = _parseVisitorDetails( data, result )
+      # DynamoDB is limited in 1MB of query results. Continue to query from the
+      # 'LastEvaluatedKey' when this condition is met.
+      if 'LastEvaluatedKey' in result.keys():
+        still_querying = True
+        while still_querying:
+          result = self.client.query(
+            TableName = self.tableName,
+            KeyConditionExpression = '#pk = :pk',
+            ExpressionAttributeNames = { '#pk': 'PK' },
+            ExpressionAttributeValues = { ':pk': visitor.pk() },
+            ScanIndexForward = True,
+            ExclusiveStartKey = result['LastEvaluatedKey']
+          )
+          data = _parseVisitorDetails( data, result )
+          if 'LastEvaluatedKey' in result.keys():
+            still_querying = False
       return data
     except ClientError as e:
       print( f'ERROR getVisitorDetails: { e }')
       return { 'error': 'Could not get visitor from table' }
+
+def _parseVisitorDetails( data, result ):
+  '''Parses the DynamoDB items to their respective objects.
+
+  Parameters
+  ----------
+  data : dict
+    The parsed data as a dictionary.
+  result : dict
+    The result of the DynamoDB query.
+
+  Returns
+  data : dict
+    The original parsed data combined with the new parsed data.
+  '''
+  for item in result['Items']:
+    if item['Type']['S'] == 'visitor':
+      data['visitor'] = itemToVisitor( item )
+    elif item['Type']['S'] == 'visit':
+      data['visits'].append( itemToVisit( item ) )
+    elif item['Type']['S'] == 'session':
+      data['sessions'].append( itemToSession( item ) )
+    elif item['Type']['S'] == 'location':
+      data['location'] = itemToLocation( item )
+    elif item['Type']['S'] == 'browser':
+      data['browsers'].append( itemToBrowser( item ) )
+  return data

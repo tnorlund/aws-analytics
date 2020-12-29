@@ -47,7 +47,7 @@ def objectToItemAtr( obj ):
 def _objectToItemAtr_singleton( obj ):
   '''Formats strings, numbers, and booleans into DynamoDB syntax.'''
   if isinstance( obj, str ):
-    if obj == 'None':
+    if obj in ('None', ''):
       return { 'NULL': True }
     return { 'S': obj }
   if isinstance( obj, ( float, int ) ):
