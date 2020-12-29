@@ -59,10 +59,10 @@ def _objectToItemAtr_singleton( obj ):
 def _objectToItemAtr_list( obj ):
   '''Formats lists into DynamoDB syntax.'''
   if isinstance( obj, list ) and \
-    all( [re.match( r'[\d\.]+', num ) for num in obj] ):
-    return { 'NS': [ str( num ) for num in obj ] }
+    all( [re.match( r'[\d\D]+', string ) for string in obj] ):
+    return { 'SS': [ str( string ) for string in obj ] }
   if isinstance( obj, list ):
-    return { 'SS': obj }
+    return { 'NS': obj }
   return None
 
 class toItemException( Exception ):

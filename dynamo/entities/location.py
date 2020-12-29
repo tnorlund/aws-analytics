@@ -243,6 +243,11 @@ def itemToLocation( item ):
           key: value['S']
           for (key, value) in item['AutonomousSystem']['M'].items()
           if 'S' in value.keys()
+        },
+        **{
+          key: None
+          for (key, value) in item['AutonomousSystem']['M'].items()
+          if 'NULL' in value.keys()
         }
       },
       item['ISP']['S'], item['Proxy']['BOOL'], item['VPN']['BOOL'],
