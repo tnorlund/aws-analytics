@@ -53,7 +53,7 @@ def processParquet( key, dynamo_client, s3_client ):
       else:
         # Skip the session when the session is already in the table.
         if Session(
-          visitor_dict['visits'][0], ip, 0, 0
+          visitor_dict['visits'][0].date, ip, 0, 0
         ).key() in [ session.key() for session in visitor_details['sessions'] ]:
           continue
         # Calculate the time deltas of the different sessions and the visitor's
