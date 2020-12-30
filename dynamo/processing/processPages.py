@@ -14,11 +14,11 @@ def processPages( dynamo_client, event ):
     The DynamoDB client used to access the table.
   event : dict
     The DynamoDB PUT event.
-  
+
   Returns
   -------
   result : str
-    The result of the number of pages processed. 
+    The result of the number of pages processed.
   '''
   # Parse the visits from the event.
   visits = [

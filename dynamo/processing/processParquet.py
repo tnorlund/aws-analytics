@@ -11,7 +11,7 @@ sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
 from dynamo.processing import processDF, processVisits # pylint: disable=wrong-import-position
-from dynamo.entities import Visitor # pylint: disable=wrong-import-position
+from dynamo.entities import Visitor, Session # pylint: disable=wrong-import-position
 from dynamo.entities import requestToLocation # pylint: disable=wrong-import-position
 
 http = urllib3.PoolManager()
@@ -51,6 +51,11 @@ def processParquet( key, dynamo_client, s3_client ):
       # Otherwise, determine whether to add a new session, update a visitor's
       # session, or combine multiple sessions.
       else:
+        # Skip the session when the session is already in the table.
+        if Session(
+          visitor_dict['visits'][0], ip, 0, 0
+        ).key() in [ session.key() for session in visitor_details['sessions'] ]:
+          continue
         # Calculate the time deltas of the different sessions and the visitor's
         # first visit.
         time_deltas = [
