@@ -7,8 +7,8 @@ import pandas as pd
 @pytest.mark.usefixtures(
   'dynamo_client', 'table_init', 's3_client', 's3_init'
 )
-def test_processParquet( 
-  # table_name, bucket_name, 
+def test_processParquet(
+  # table_name, bucket_name,
 visits, browsers ):
   pd.DataFrame( {
     'id': [
