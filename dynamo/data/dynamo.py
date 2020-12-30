@@ -415,7 +415,7 @@ class DynamoClient( _Visitor, _Location, _Session, _Visit, _Browser ):
       The result of requesting the page from the table. This contains either the
       error that occurred or the page's analytics.
     '''
-    if not isinstance( page, Page ):
+    if not isinstance( page, ( Page, Visit ) ):
       raise ValueError( 'Must pass a Page object' )
     try:
       result = self.client.query(
