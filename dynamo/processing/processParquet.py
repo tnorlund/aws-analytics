@@ -198,6 +198,7 @@ def _updateSessions( oldSessions, visits, dynamo_client ):
   # Remove the unnecessary sessions from the table.
   for session in oldSessions[1:]:
     dynamo_client.removeSession( session )
+    dynamo_client.decrementVisitorSessions( Visitor( session.ip ) )
   # The visits must be combined and assigned the correct attributes before
   # adding them to the table. Combine the previous visits with the ones in the
   # last session and reassign their attributes.
