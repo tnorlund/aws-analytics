@@ -122,8 +122,8 @@ class _Location:
         TableName = self.tableName,
         ScanFilter = {
           'Type': {
-          'AttributeValueList': [ { 'S': 'location' } ],
-          'ComparisonOperator': 'EQ'
+            'AttributeValueList': [ { 'S': 'location' } ],
+            'ComparisonOperator': 'EQ'
           }
         }
       )
@@ -138,8 +138,8 @@ class _Location:
             TableName = self.tableName,
             ScanFilter = {
               'Type': {
-              'AttributeValueList': [ { 'S': 'location' } ],
-              'ComparisonOperator': 'EQ'
+                'AttributeValueList': [ { 'S': 'location' } ],
+                'ComparisonOperator': 'EQ'
               }
             },
             ExclusiveStartKey = result['LastEvaluatedKey']

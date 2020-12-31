@@ -21,7 +21,7 @@ class _Visitor:
     Returns
     -------
     result : dict
-      The result of adding the the visitor to the table.
+      The result of adding the visitor to the table.
     '''
     if not isinstance( visitor, Visitor ):
       raise ValueError( 'Must pass a Visitor object' )
@@ -37,6 +37,34 @@ class _Visitor:
       if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
         return { 'error': f'Visitor already in table { visitor }' }
       return { 'error': 'Could not add new visitor to table' }
+
+  def updateVisitor( self, visitor ):
+    '''Updates a visitor in the table.
+
+    Parameters
+    ----------
+    visitor : Visitor
+      The visitor to be updated in the table.
+
+    Returns
+    -------
+    result : dict
+      The result of updating the visitor to the table.
+    '''
+    if not isinstance( visitor, Visitor ):
+      raise ValueError( 'Must pass a Visitor object' )
+    try:
+      self.client.put_item(
+        TableName = self.tableName,
+        Item = visitor.toItem(),
+        ConditionExpression = 'attribute_exists(PK)'
+      )
+      return { 'visitor': visitor }
+    except ClientError as e:
+      print( f'ERROR updateVisitor: { e }' )
+      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+        return { 'error': f'Visitor not in table { visitor }' }
+      return { 'error': 'Could not update visitor in table' }
 
   def addNewVisitor( self, visitor, location, browsers, visits ):
     '''Adds a new visitor and their details the the table.
@@ -158,11 +186,49 @@ class _Visitor:
       )
       return { 'visitor': visitor }
     except ClientError as e:
-      print( f'ERROR incrementSessions: { e }' )
+      print( f'ERROR incrementVisitorSessions: { e }' )
       if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
         return { 'error': 'Visitor not in table' }
       return {
         'error': 'Could not increment the number of sessions of visitor'
+      }
+
+  def decrementVisitorSessions( self, visitor ):
+    '''Decrements the number of sessions a visitor has.
+
+    Parameters
+    ----------
+    visitor : Visitor
+      The visitor to have their number of sessions incremented.
+
+    Returns
+    -------
+    result : dict
+      The result of decrementing the number of sessions the visitor has. This
+      could be either an error or the updated visitor.
+    '''
+    if not isinstance( visitor, Visitor ):
+      raise ValueError( 'Must pass a Visitor object' )
+    try:
+      result = self.client.update_item(
+        TableName = self.tableName,
+        Key = visitor.key(),
+        ConditionExpression = 'attribute_exists(PK)',
+        UpdateExpression= 'SET #count = #count - :dec',
+        ExpressionAttributeNames = { '#count': 'NumberSessions' },
+        ExpressionAttributeValues= { ':dec': { 'N': '1' } },
+        ReturnValues= 'ALL_NEW'
+      )
+      visitor.numberSessions = int(
+        result['Attributes']['NumberSessions']['N']
+      )
+      return { 'visitor': visitor }
+    except ClientError as e:
+      print( f'ERROR decrementVisitorSessions: { e }' )
+      if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+        return { 'error': 'Visitor not in table' }
+      return {
+        'error': 'Could not decrement the number of sessions of visitor'
       }
 
   def getVisitorDetails( self, visitor ):
@@ -215,6 +281,52 @@ class _Visitor:
     except ClientError as e:
       print( f'ERROR getVisitorDetails: { e }')
       return { 'error': 'Could not get visitor from table' }
+
+  def listVisitors( self ):
+    '''Lists all visitors in the table.
+
+    Returns
+    -------
+    visitors : list[ Visitor ]
+      The list of visitors from the table.
+    '''
+    # Use a list to store the locations returned from the table.
+    visitors = []
+    try:
+      result = self.client.scan(
+        TableName = self.tableName,
+        ScanFilter = {
+          'Type': {
+            'AttributeValueList': [ { 'S': 'visitor' } ],
+            'ComparisonOperator': 'EQ'
+          }
+        }
+      )
+      for item in result['Items']:
+        visitors.append( itemToVisitor( item ) )
+      # DynamoDB is limited in 1MB of query results. Continue to query from the
+      # 'LastEvaluatedKey' when this condition is met.
+      if 'LastEvaluatedKey' in result.keys():
+        still_querying = True
+        while still_querying:
+          result = self.client.scan(
+            TableName = self.tableName,
+            ScanFilter = {
+              'Type': {
+                'AttributeValueList': [ { 'S': 'location' } ],
+                'ComparisonOperator': 'EQ'
+              }
+            },
+            ExclusiveStartKey = result['LastEvaluatedKey']
+          )
+          for item in result['Items']:
+            visitors.append( itemToVisitor( item ) )
+          if 'LastEvaluatedKey' not in result.keys():
+            still_querying = False
+      return visitors
+    except ClientError as e:
+      print( f'ERROR listVisitors: { e }' )
+      return { 'error': 'Could not get visitors from table' }
 
 def _parseVisitorDetails( data, result ):
   '''Parses the DynamoDB items to their respective objects.

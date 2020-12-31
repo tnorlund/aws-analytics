@@ -184,7 +184,7 @@ class _Session():
       print( f'ERROR getSessionDetails: { e }')
       return { 'error': 'Could not get session from table' }
 
-  def updateSession( self, session, visits ):
+  def updateSession( self, session, visits, print_error = True ):
     '''Updates a session with new visits and attributes.
 
     Parameters
@@ -234,7 +234,8 @@ class _Session():
       self.addVisits( visits )
       return { 'session': session, 'visits': visits }
     except ClientError as e:
-      print( f'ERROR updateSession: { e }' )
+      if print_error:
+        print( f'ERROR updateSession: { e }' )
       if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
         return { 'error': f'Session not in table { session }' }
       return { 'error': 'Could not update session in table' }

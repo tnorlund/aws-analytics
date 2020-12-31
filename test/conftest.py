@@ -254,6 +254,17 @@ def year_session():
   '''A proper Session object.'''
   return Session( '2020-01-01T00:00:00.000Z', '0.0.0.1', 60.0, 60.0 )
 
+@pytest.fixture
+def samsung_G950U_app():
+  '''The user agent of a Samsung phone'''
+  return 'Mozilla/5.0 (Linux; Android 9; SM-G950U) AppleWebKit/537.36 ' + \
+    '(KHTML, like Gecko) Chrome/87.0.4280.101 Mobile Safari/537.36'
+
+@pytest.fixture
+def samsung_G981U1_app():
+  return 'Mozilla/5.0 (Linux; Android 10; SAMSUNG SM-G981U1) ' + \
+    'AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/13.0 ' + \
+    'Chrome/83.0.4103.106 Mobile Safari/537.36'
 
 @pytest.fixture
 def pixel_app():

@@ -255,8 +255,6 @@ def _updateSession( lastSession, visits, dynamo_client ):
   ).total_seconds()
   # Add the updated session and visits to the table.
   result = dynamo_client.updateSession(
-    session_details['session'], combined_visits
+    session_details['session'], combined_visits, False
   )
-  if 'error' in result.keys():
-    print( 'ERROR _updateSession ' + result['error'] )
   return result

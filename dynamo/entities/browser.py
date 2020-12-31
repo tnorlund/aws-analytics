@@ -255,19 +255,34 @@ class Browser:
     return False
 
   def _matchAndroid( self ):
-    match = re.match(
-      r"Mozilla/5.0 \(Linux; Android (\d+); ([a-zA-Z\d\s]+)\) AppleWebKit/" + \
+    chrome_match = re.match(
+      r"Mozilla/5.0 \(Linux; Android (\d+); ([a-zA-Z\d\s-]+)\) AppleWebKit/" + \
       r"([0-9]+\.[0-9]+) \(KHTML, like Gecko\) " + \
       r"Chrome/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) Mobile Safari/([0-9]+\.[0-9]+)",
       self.app
     )
-    if match:
-      self.device = match.group(2)
+    samsung_match = re.match(
+      r"Mozilla/5.0 \(Linux; Android (\d+); ([a-zA-Z\d\s-]+)\) AppleWebKit/" + \
+      r"([0-9]+\.[0-9]+) \(KHTML, like Gecko\) " + \
+      r"SamsungBrowser/([0-9]+\.[0-9]+) " + \
+      r"Chrome/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) Mobile Safari/([0-9]+\.[0-9]+)",
+      self.app
+    )
+    if chrome_match:
+      self.device = chrome_match.group(2)
       self.deviceType = 'mobile'
       self.browser = 'chrome'
-      self.os = match.group(1)
-      self.webkit = match.group(3)
-      self.version = match.group(4)
+      self.os = chrome_match.group(1)
+      self.webkit = chrome_match.group(3)
+      self.version = chrome_match.group(4)
+      return True
+    if samsung_match:
+      self.device = samsung_match.group(2)
+      self.deviceType = 'mobile'
+      self.browser = 'samsung'
+      self.os = samsung_match.group(1)
+      self.webkit = samsung_match.group(3)
+      self.version = samsung_match.group(4)
       return True
     return False
 

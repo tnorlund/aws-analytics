@@ -2,7 +2,7 @@ import datetime
 import pytest
 from dynamo.entities import Browser, itemToBrowser
 
-def test_default_android_init( ip, pixel_app ):
+def test_default_pixel_init( ip, pixel_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
     pixel_app, ip, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
@@ -19,6 +19,44 @@ def test_default_android_init( ip, pixel_app ):
   assert browser.os == '11'
   assert browser.webkit == '537.36'
   assert browser.version == '86.0.4240.198'
+
+def test_default_samsung_G950U_init( ip, samsung_G950U_app ):
+  currentTime = datetime.datetime.now()
+  browser = Browser(
+    samsung_G950U_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    dateAdded = currentTime
+  )
+  assert browser.app == samsung_G950U_app
+  assert browser.ip == ip
+  assert browser.width == 100
+  assert browser.height == 200
+  assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
+  assert browser.dateAdded == currentTime
+  assert browser.device == 'SM-G950U'
+  assert browser.deviceType == 'mobile'
+  assert browser.browser == 'chrome'
+  assert browser.os == '9'
+  assert browser.webkit == '537.36'
+  assert browser.version == '87.0.4280.101'
+
+def test_default_samsung_G981U1_init( ip, samsung_G981U1_app ):
+  currentTime = datetime.datetime.now()
+  browser = Browser(
+    samsung_G981U1_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    dateAdded = currentTime
+  )
+  assert browser.app == samsung_G981U1_app
+  assert browser.ip == ip
+  assert browser.width == 100
+  assert browser.height == 200
+  assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
+  assert browser.dateAdded == currentTime
+  assert browser.device == 'SAMSUNG SM-G981U1'
+  assert browser.deviceType == 'mobile'
+  assert browser.browser == 'samsung'
+  assert browser.os == '10'
+  assert browser.webkit == '537.36'
+  assert browser.version == '13.0'
 
 def test_default_mac_chrome_init( ip, mac_chrome_app ):
   currentTime = datetime.datetime.now()
