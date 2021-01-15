@@ -37,11 +37,7 @@ class S3Client():
     key : str
       The path and file name of the object in the S3 bucket.
     '''
-    return self.client.put_object(
-      Bucket = self.bucketname,
-      Key = key,
-      Body = file
-    )
+    self.client.upload_file(file, self.bucketname, key)
 
   def listParquet( self, prefix='/'):
     '''Lists the '.parquet' objects in a bucket.

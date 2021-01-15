@@ -41,5 +41,5 @@ def test_getObject( bucket_name ):
   result = client.getObject( '/test.parquet' )
   assert 'Body' in result.keys()
   body_read = result['Body'].read()
-  assert body_read == bytes( 'test.parquet', 'utf-8' )
+  assert body_read == bytes( 'this is a test', 'utf-8' )
   os.remove( 'test.parquet' )
