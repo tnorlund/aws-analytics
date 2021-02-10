@@ -19,7 +19,7 @@ class Visitor:
   toItem():
     Returns the visitor as a parsed DynamoDB item.
   '''
-  def __init__( self, ip, numberSessions = 0 ):
+  def __init__( self, visitor_id, numberSessions = 0 ):
     '''Constructs the necessary attributes for the visitor object.
 
     Parameters
@@ -29,7 +29,7 @@ class Visitor:
     numberSessions : int, optional
       The number of unique the sessions the visitor has made. (default is 0)
     '''
-    self.ip = ip
+    self.id = visitor_id
     self.numberSessions = numberSessions
 
   def key( self ):
@@ -38,7 +38,7 @@ class Visitor:
     This is used to retrieve the unique visitor from the table.
     '''
     return {
-      'PK': { 'S': f'VISITOR#{ self.ip }' },
+      'PK': { 'S': f'VISITOR#{ self.id }' },
       'SK': { 'S': '#VISITOR' }
     }
 
@@ -47,7 +47,7 @@ class Visitor:
 
     This is used to retrieve the visitor-specific data from the table.
     '''
-    return { 'S': f'VISITOR#{ self.ip }' }
+    return { 'S': f'VISITOR#{ self.id }' }
 
   def toItem( self ):
     """Returns the visitor as a parsed DynamoDB item.
@@ -64,11 +64,11 @@ class Visitor:
     }
 
   def __iter__( self ):
-    yield 'ip', self.ip
+    yield 'id', self.id
     yield 'numberSessions', self.numberSessions
 
   def __repr__( self ):
-    return f"{ self.ip } - { self.numberSessions }"
+    return f"{ self.id } - { self.numberSessions }"
 
 def itemToVisitor( item ):
   '''Parses a DynamoDB item as a visitor object.

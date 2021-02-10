@@ -48,7 +48,7 @@ class Location:
     Returns the location as a parsed DynamoDB item.
   '''
   def __init__(
-    self, ip, country, region, city, latitude, longitude, postalCode, timezone,
+    self, visitor_id, ip, country, region, city, latitude, longitude, postalCode, timezone,
     domains, autonomousSystem, isp, proxy, vpn, tor,
     dateAdded = datetime.datetime.now()
   ):
@@ -88,6 +88,7 @@ class Location:
     dateAdded : datetime.datetime
       The datetime the location was added to the table.
     '''
+    self.id = visitor_id
     self.ip = ip
     self.country = country
     self.region = region
@@ -114,7 +115,7 @@ class Location:
     This is used to retrieve the unique session from the table.
     '''
     return {
-      'PK': { 'S': f'VISITOR#{ self.ip }' },
+      'PK': { 'S': f'VISITOR#{ self.id }' },
       'SK': { 'S': '#LOCATION' }
     }
 
@@ -123,7 +124,7 @@ class Location:
 
     This is used to retrieve the visitor-specific data from the table.
     '''
-    return { 'S': f'VISITOR#{ self.ip }' }
+    return { 'S': f'VISITOR#{ self.id }' }
 
   def toItem( self ):
     '''Returns the location as a parsed DynamoDB item.
@@ -136,6 +137,7 @@ class Location:
     return {
       **self.key(),
       'Type': { 'S': 'location' },
+      'IP': { 'S': self.ip },
       'Country': { 'S': self.country },
       'Region': { 'S': self.region },
       'City': { 'S': self.city },
@@ -153,9 +155,10 @@ class Location:
     }
 
   def __repr__( self ):
-    return f"{ self.ip } - { self.city }"
+    return f"{ self.id } - { self.city }"
 
   def __iter__( self ):
+    yield 'id', self.id
     yield 'ip', self.ip
     yield 'country', self.country
     yield 'region', self.region
@@ -172,7 +175,7 @@ class Location:
     yield 'tor', self.tor
     yield 'dateAdded', self.dateAdded
 
-def requestToLocation( req ):
+def requestToLocation( req, visitor_id ):
   '''Parses the JSON formatted GET request ipify gives.
 
   ipify gives IP Geolocation and IP Proxy data based on the visitor's IP
@@ -196,7 +199,7 @@ def requestToLocation( req ):
   '''
   try:
     return Location(
-      req['ip'], req['location']['country'], req['location']['region'],
+      visitor_id, req['ip'], req['location']['country'], req['location']['region'],
       req['location']['city'], req['location']['lat'], req['location']['lng'],
       req['location']['postalCode'], req['location']['timezone'],
       None if 'domains' not in req.keys() else req['domains'],
@@ -227,7 +230,7 @@ def itemToLocation( item ):
   '''
   try:
     return Location(
-      item['PK']['S'].split('#')[1], item['Country']['S'], item['Region']['S'],
+      item['PK']['S'].split('#')[1], item['IP']['S'], item['Country']['S'], item['Region']['S'],
       item['City']['S'], float( item['Latitude']['N'] ),
       float( item['Longitude']['N'] ),
       None if 'NULL' in item['PostalCode'].keys() else item['PostalCode']['S'],

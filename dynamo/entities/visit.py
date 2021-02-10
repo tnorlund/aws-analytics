@@ -55,7 +55,7 @@ class Visit:
     Returns the visit as a parsed DynamoDB item.
   """
   def __init__(
-    self, date, ip, user, title, slug, sessionStart, timeOnPage=None,
+    self, visitor_id, date, user, title, slug, sessionStart, timeOnPage=None,
     prevTitle=None, prevSlug=None, nextTitle=None, nextSlug=None,
   ):
     '''Constructs the necessary attributes for the visit object.
@@ -95,7 +95,7 @@ class Visit:
     self.date = datetime.datetime.strptime(
       date, '%Y-%m-%dT%H:%M:%S.%fZ'
     ) if isinstance( date, str ) else date
-    self.ip = ip
+    self.id = visitor_id
     if user == 'None' or user is None:
       self.user = 0
     else:
@@ -122,7 +122,7 @@ class Visit:
     This is used to retrieve the unique visit from the table.
     '''
     return {
-      'PK': { 'S': f'VISITOR#{ self.ip }' },
+      'PK': { 'S': f'VISITOR#{ self.id }' },
       'SK': { 'S': f'VISIT#{ formatDate( self.date ) }#{ self.slug }' }
     }
 
@@ -131,7 +131,7 @@ class Visit:
 
     This is used to retrieve the visitor-specific data from the table.
     '''
-    return { 'S': f'VISITOR#{ self.ip }' }
+    return { 'S': f'VISITOR#{ self.id }' }
 
   def gsi1( self ):
     '''Returns the Primary Key of the first Global Secondary Index of the
@@ -160,7 +160,7 @@ class Visit:
     '''
     return {
       'GSI2PK': { 'S': f'''SESSION#{
-        self.ip
+        self.id
       }#{ formatDate( self.sessionStart ) }''' },
       'GSI2SK': { 'S': f'VISIT#{ formatDate( self.date ) }' }
     }
@@ -171,7 +171,7 @@ class Visit:
 
     This is used to retrieve the session-specific data from the table.
     '''
-    return { 'S': f'SESSION#{ self.ip }#{ formatDate( self.sessionStart ) }' }
+    return { 'S': f'SESSION#{ self.id }#{ formatDate( self.sessionStart ) }' }
 
   def toItem( self ):
     '''Returns the visit as a parsed DynamoDB item.
@@ -197,11 +197,11 @@ class Visit:
     }
 
   def __repr__( self ):
-    return f"{ self.ip } - { formatDate( self.date ) }"
+    return f"{ self.id } - { formatDate( self.date ) }"
 
   def __iter__( self ):
     yield 'date', self.date
-    yield 'ip', self.ip
+    yield 'id', self.id
     yield 'user', self.user
     yield 'title', self.title
     yield 'slug', self.slug
@@ -231,7 +231,7 @@ def itemToVisit( item ):
   '''
   try:
     return Visit(
-      item['SK']['S'].split('#')[1], item['PK']['S'].split('#')[1],
+      item['PK']['S'].split('#')[1], item['SK']['S'].split('#')[1],
       int( item['User']['N'] ), item['Title']['S'], item['Slug']['S'],
       item['GSI2PK']['S'].split('#')[2],
       np.nan

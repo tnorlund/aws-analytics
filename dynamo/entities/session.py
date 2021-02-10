@@ -32,7 +32,7 @@ class Session:
     Returns the session as a parsed DynamoDB item.
   """
   def __init__(
-    self, sessionStart, ip, avgTime, totalTime
+    self, sessionStart, visitor_id, avgTime, totalTime
   ):
     '''Constructs the necessary attributes for the session object.
 
@@ -53,7 +53,7 @@ class Session:
       else datetime.datetime.strptime(
         sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ'
       )
-    self.ip = ip
+    self.id = visitor_id
     self.avgTime = float( avgTime ) if avgTime is not None else avgTime
     self.totalTime = float( totalTime ) if totalTime is not None else totalTime
 
@@ -63,7 +63,7 @@ class Session:
     This is used to retrieve the unique session from the table.
     '''
     return {
-      'PK': { 'S': f'VISITOR#{ self.ip }' },
+      'PK': { 'S': f'VISITOR#{ self.id }' },
       'SK': { 'S': f'SESSION#{ formatDate( self.sessionStart ) }' }
     }
 
@@ -72,7 +72,7 @@ class Session:
 
     This is used to retrieve the visitor-specific data from the table.
     '''
-    return { 'S': f'VISITOR#{ self.ip }' }
+    return { 'S': f'VISITOR#{ self.id }' }
 
   def gsi2( self ):
     '''Returns the Primary Key of the second Global Secondary Index of the
@@ -82,7 +82,7 @@ class Session:
     '''
     return {
       'GSI2PK': { 'S': f'''SESSION#{
-        self.ip
+        self.id
       }#{ formatDate( self.sessionStart ) }''' },
       'GSI2SK': { 'S': '#SESSION' }
     }
@@ -94,7 +94,7 @@ class Session:
     This is used to retrieve the session-specific data from the table.
     '''
     return { 'S': f'''SESSION#{
-      self.ip
+      self.id
     }#{ formatDate( self.sessionStart ) }''' }
 
   def toItem( self ):
@@ -114,11 +114,11 @@ class Session:
     }
 
   def __repr__( self ):
-    return f'{ self.ip } - { self.totalTime }'
+    return f'{ self.id } - { self.totalTime }'
 
   def __iter__( self ):
     yield 'sessionStart', self.sessionStart
-    yield 'ip', self.ip
+    yield 'id', self.id
     yield 'avgTime', self.avgTime
     yield 'totalTime', self.totalTime
 
@@ -144,7 +144,8 @@ def itemToSession( item ):
     return Session(
       datetime.datetime.strptime(
         item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
-      ), item['PK']['S'].split('#')[1],
+      ), 
+      item['PK']['S'].split('#')[1],
       None if 'NULL' in item['AverageTime'].keys() \
         else float( item['AverageTime']['N'] ),
       None if 'NULL' in item['TotalTime'].keys() \

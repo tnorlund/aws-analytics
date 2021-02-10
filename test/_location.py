@@ -3,7 +3,7 @@ from dynamo.entities import Location
 def location():
   '''Properly formatted location.'''
   return Location(
-    '0.0.0.0', 'US', 'California', 'Stockton', 37.9577, -121.29078, '95201',
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Stockton', 37.9577, -121.29078, '95201',
     '-08:00', ['c-73-66-102-206.hsd1.ca.comcast.net'],
     {
       'asn': 7922,
@@ -20,7 +20,7 @@ def locations():
   '''Properly formatted locations.'''
   return [
     Location(
-      '0.0.0.0', 'US', 'California', 'Stockton', 37.9577, -121.29078, '95201',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Stockton', 37.9577, -121.29078, '95201',
       '-08:00', ['c-73-66-102-206.hsd1.ca.comcast.net'],
       {
         'asn': 7922,
@@ -33,7 +33,7 @@ def locations():
       '2020-12-29T17:40:00.144Z'
     ),
     Location(
-      '0.0.0.1', 'US', 'California', 'San Francisco', 37.77493, -122.41942,
+      '171a0329-f8b2-499c-867d-1942384ddd5r', '0.0.0.1', 'US', 'California', 'San Francisco', 37.77493, -122.41942,
       '94102', '-08:00', ['c-73-222-141-27.hsd1.ca.comcast.net'],
       {
         'asn': 7922,
@@ -46,7 +46,7 @@ def locations():
       '2020-12-29T17:40:00.144Z'
     ),
     Location(
-      '0.0.0.2', 'US', 'Washington', 'Redmond', 47.67399, -122.12151, '98052',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '0.0.0.2', 'US', 'Washington', 'Redmond', 47.67399, -122.12151, '98052',
       '-08:00', None,
       {
         'asn': 3598,
@@ -58,7 +58,7 @@ def locations():
       'Microsoft Corporation', False, False, False, '2020-12-29T17:40:00.144Z'
     ),
     Location(
-      '0.0.0.3', 'US', 'California', 'North Cucamonga', 34.09334, -117.58172,
+      '171a0329-f8b2-499c-867d-1942384ddd5e', '0.0.0.3', 'US', 'California', 'North Cucamonga', 34.09334, -117.58172,
       None, '-08:00',
       [
         '075-140-017-078.biz.spectrum.com',

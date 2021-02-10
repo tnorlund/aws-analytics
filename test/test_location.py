@@ -5,7 +5,7 @@ from dynamo.entities import Location, requestToLocation, itemToLocation # pylint
 def test_init():
   currentTime = datetime.datetime.now()
   location = Location(
-    '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
     -118.819444, '91361', '-08:00', ['cpe-75-82-84-171.socal.res.rr.com'], {
       'asn': 20001,
       'name': 'Charter Communications (20001)',
@@ -14,6 +14,7 @@ def test_init():
       'type': 'Cable/DSL/ISP'
     }, 'Charter Communications', False, False, False, currentTime
   )
+  assert location.id == '171a0329-f8b2-499c-867d-1942384ddd5f'
   assert location.ip == '0.0.0.0'
   assert location.country == 'US'
   assert location.region == 'California'
@@ -38,7 +39,7 @@ def test_init():
 
 def test_key():
   location = Location(
-    '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
     -118.819444, '91361', '-08:00', ['cpe-75-82-84-171.socal.res.rr.com'], {
       'asn': 20001,
       'name': 'Charter Communications (20001)',
@@ -48,13 +49,13 @@ def test_key():
     }, 'Charter Communications', False, False, False
   )
   assert location.key() == {
-    'PK': { 'S': 'VISITOR#0.0.0.0' },
+    'PK': { 'S': 'VISITOR#171a0329-f8b2-499c-867d-1942384ddd5f' },
     'SK': { 'S': '#LOCATION' }
   }
 
 def test_pk():
   location = Location(
-    '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
     -118.819444, '91361', '-08:00', ['cpe-75-82-84-171.socal.res.rr.com'], {
       'asn': 20001,
       'name': 'Charter Communications (20001)',
@@ -63,12 +64,12 @@ def test_pk():
       'type': 'Cable/DSL/ISP'
     }, 'Charter Communications', False, False, False
   )
-  assert location.pk() == { 'S': 'VISITOR#0.0.0.0' }
+  assert location.pk() == { 'S': 'VISITOR#171a0329-f8b2-499c-867d-1942384ddd5f' }
 
 def test_toItem():
   currentTime = datetime.datetime.now()
   location = Location(
-    '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
     -118.819444, '91361', '-08:00', ['cpe-75-82-84-171.socal.res.rr.com'], {
       'asn': 20001,
       'name': 'Charter Communications (20001)',
@@ -78,9 +79,10 @@ def test_toItem():
     }, 'Charter Communications', False, False, False, currentTime
   )
   assert location.toItem() == {
-    'PK': { 'S': 'VISITOR#0.0.0.0' },
+    'PK': { 'S': 'VISITOR#171a0329-f8b2-499c-867d-1942384ddd5f' },
     'SK': { 'S': '#LOCATION' },
     'Type': { 'S': 'location' },
+    'IP': { 'S': '0.0.0.0' },
     'Country': { 'S': 'US' },
     'Region': { 'S': 'California' },
     'City': { 'S': 'Westlake Village' },
@@ -108,7 +110,7 @@ def test_toItem():
 
 def test_repr():
   location = Location(
-    '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
     -118.819444, '91361', '-08:00', ['cpe-75-82-84-171.socal.res.rr.com'], {
       'asn': 20001,
       'name': 'Charter Communications (20001)',
@@ -117,12 +119,12 @@ def test_repr():
       'type': 'Cable/DSL/ISP'
     }, 'Charter Communications', False, False, False
   )
-  assert repr( location ) == '0.0.0.0 - Westlake Village'
+  assert repr( location ) == '171a0329-f8b2-499c-867d-1942384ddd5f - Westlake Village'
 
 def test_dict():
   currentTime = datetime.datetime.now()
   location = Location(
-    '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
     -118.819444, '91361', '-08:00', ['cpe-75-82-84-171.socal.res.rr.com'], {
       'asn': 20001,
       'name': 'Charter Communications (20001)',
@@ -132,6 +134,7 @@ def test_dict():
     }, 'Charter Communications', False, False, False, currentTime
   )
   assert dict( location ) == {
+    'id': '171a0329-f8b2-499c-867d-1942384ddd5f',
     'ip': '0.0.0.0',
     'country': 'US',
     'region': 'California',
@@ -179,8 +182,10 @@ def test_requestToLocation():
       },
       'isp': 'Charter Communications',
       'proxy': { 'proxy': False, 'vpn': False, 'tor': False }
-    }
+    },
+    '171a0329-f8b2-499c-867d-1942384ddd5f'
   )
+  assert location.id == '171a0329-f8b2-499c-867d-1942384ddd5f'
   assert location.ip == '0.0.0.0'
   assert location.country == 'US'
   assert location.region == 'California'
@@ -226,8 +231,10 @@ def test_postal_code_requestToLocation():
       },
       'isp': 'Charter Communications',
       'proxy': { 'proxy': False, 'vpn': False, 'tor': False }
-    }
+    },
+    '171a0329-f8b2-499c-867d-1942384ddd5f'
   )
+  assert location.id == '171a0329-f8b2-499c-867d-1942384ddd5f'
   assert location.ip == '0.0.0.0'
   assert location.country == 'US'
   assert location.region == 'California'
@@ -272,8 +279,10 @@ def test_domains_requestToLocation():
       },
       'isp': 'Charter Communications',
       'proxy': { 'proxy': False, 'vpn': False, 'tor': False }
-    }
+    },
+    '171a0329-f8b2-499c-867d-1942384ddd5f'
   )
+  assert location.id == '171a0329-f8b2-499c-867d-1942384ddd5f'
   assert location.ip == '0.0.0.0'
   assert location.country == 'US'
   assert location.region == 'California'
@@ -297,12 +306,12 @@ def test_domains_requestToLocation():
 
 def test_exception_requestToLocation():
   with pytest.raises( Exception ) as e:
-    assert requestToLocation( {} )
+    assert requestToLocation( {}, '171a0329-f8b2-499c-867d-1942384ddd5f' )
   assert str( e.value ) == 'Could not parse location'
 
 def test_itemToLocation():
   location = Location(
-    '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Westlake Village', 34.141944,
     -118.819444, None, '-08:00',
     [
       'cpe-75-82-84-171.socal.res.rr.com',
@@ -317,6 +326,7 @@ def test_itemToLocation():
     }, 'Charter Communications', False, False, False
   )
   newLocation = itemToLocation( location.toItem() )
+  assert location.id == newLocation.id
   assert location.ip == newLocation.ip
   assert location.country == newLocation.country
   assert location.region == newLocation.region

@@ -114,7 +114,7 @@ class _Session():
     else:
       totalTime = ( visits[-1].date - visits[0].date ).total_seconds()
     session = Session(
-      visits[0].date, visits[0].ip, averageTime, totalTime
+      visits[0].date, visits[0].id, averageTime, totalTime
     )
     result = self.addSession( session )
     if 'error' in result.keys():
@@ -223,7 +223,7 @@ class _Session():
     else:
       totalTime = ( visits[-1].date - visits[0].date ).total_seconds()
     session = Session(
-      visits[0].date, visits[0].ip, averageTime, totalTime
+      visits[0].date, visits[0].id, averageTime, totalTime
     )
     try:
       self.client.put_item(

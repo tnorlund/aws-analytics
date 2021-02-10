@@ -108,122 +108,116 @@ def ip():
 
 @pytest.fixture
 def visitor():
-  '''A proper Visit object.'''
-  return Visitor( '0.0.0.0' )
-
-@pytest.fixture
-def browsers():
-  '''A list of proper Browser objects.'''
-  return[
-    Browser(
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
-        'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 ' + \
-        'Mobile/15E148 Safari/604.1',
-      '0.0.0.0', 100, 200, '2020-01-01T00:00:00.000Z',
-      dateAdded = '2020-01-01T00:00:00.000Z'
-    ),
-    Browser(
-      'Mozilla/5.0 (Linux; Android 11; Pixel 4 XL) AppleWebKit/537.36 ' + \
-        '(KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36',
-      '0.0.0.0', 100, 200, '2020-01-01T00:01:00.000Z',
-      dateAdded = '2020-01-01T00:00:00.000Z'
-    )
-  ]
+  return Visitor( '171a0329-f8b2-499c-867d-1942384ddd5f' )
 
 @pytest.fixture
 def visit():
-  '''A proper Visit object.'''
   return Visit(
-    '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-12-23T20:32:26.000Z', '0', 'Tyler Norlund', '/',
     '2020-12-23T20:32:26.000Z'
   )
 
 @pytest.fixture
 def visits():
-  '''A list of proper Visit objects.'''
   return[
     Visit(
-      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
-      '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-03T00:01:00.000Z', '0.0.0.0', '0', 'Blog', '/blog',
-      '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-01T00:01:00.000Z', '0', 'Blog', '/blog',
+      '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
+    )
+  ]
+
+@pytest.fixture
+def browsers():
+  return[
+    Browser(
+      '171a0329-f8b2-499c-867d-1942384ddd5f', 
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
+        'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 ' + \
+        'Mobile/15E148 Safari/604.1',
+      100, 200, '2020-01-01T00:00:00.000Z',
+      dateAdded = '2020-01-01T00:00:00.000Z'
+    ),
+    Browser(
+      '171a0329-f8b2-499c-867d-1942384ddd5f', 
+      'Mozilla/5.0 (Linux; Android 11; Pixel 4 XL) AppleWebKit/537.36 ' + \
+        '(KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36',
+      100, 200, '2020-01-01T00:01:00.000Z',
+      dateAdded = '2020-01-01T00:00:00.000Z'
     )
   ]
 
 @pytest.fixture
 def year_visits():
-  '''A list of proper Visit objects that span a year.'''
   return [
     Visit(
-      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-02-01T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-01T00:00:01.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '2020-03-01T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     )
 ]
 
 @pytest.fixture
 def month_visits():
-  '''A list of proper Visit objects that span a month.'''
   return [
     Visit(
-      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '2020-01-25T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-25T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     ),
     Visit(
-      '2020-01-30T00:00:00.000Z', '0.0.0.2', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5s', '2020-01-30T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     )
   ]
 
 @pytest.fixture
 def week_visits():
-  '''A list of proper Visit objects that span a week.'''
   return [
     Visit(
-      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-03T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '2020-01-04T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-04T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     ),
   ]
 
 @pytest.fixture
 def day_visits():
-  '''A list of proper Visit objects that span a day.'''
   return [
     Visit(
-      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-03T00:00:00.000Z',  '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z',  '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '2020-01-03T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:00.000Z',  '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     ),
   ]
@@ -247,12 +241,12 @@ def page():
 @pytest.fixture
 def session():
   '''A proper Session object.'''
-  return Session( '2020-01-03T00:00:00.000Z', '0.0.0.0', 60.0, 60.0 )
+  return Session( '2020-01-01T00:00:00.000Z', '171a0329-f8b2-499c-867d-1942384ddd5f', 60.0, 60.0 )
 
 @pytest.fixture
 def year_session():
   '''A proper Session object.'''
-  return Session( '2020-01-01T00:00:00.000Z', '0.0.0.1', 60.0, 60.0 )
+  return Session( '2020-01-01T00:00:00.000Z', '171a0329-f8b2-499c-867d-1942384ddd5f', 60.0, 60.0 )
 
 @pytest.fixture
 def samsung_G950U_app():

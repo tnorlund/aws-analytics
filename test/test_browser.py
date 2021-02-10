@@ -2,13 +2,15 @@ import datetime
 import pytest
 from dynamo.entities import Browser, itemToBrowser
 
-def test_default_pixel_init( ip, pixel_app ):
+visitor_id = '171a0329-f8b2-499c-867d-1942384ddd5f'
+
+def test_default_pixel_init( pixel_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    pixel_app, ip, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
+    visitor_id, pixel_app, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
   )
+  assert browser.id == visitor_id
   assert browser.app == pixel_app
-  assert browser.ip == ip
   assert browser.width == 100
   assert browser.height == 200
   assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
@@ -20,14 +22,14 @@ def test_default_pixel_init( ip, pixel_app ):
   assert browser.webkit == '537.36'
   assert browser.version == '86.0.4240.198'
 
-def test_default_samsung_G950U_init( ip, samsung_G950U_app ):
+def test_default_samsung_G950U_init( samsung_G950U_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    samsung_G950U_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    visitor_id, samsung_G950U_app, 100, 200, '2020-01-01T00:00:00.000Z',
     dateAdded = currentTime
   )
   assert browser.app == samsung_G950U_app
-  assert browser.ip == ip
+  assert browser.id == visitor_id
   assert browser.width == 100
   assert browser.height == 200
   assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
@@ -39,14 +41,14 @@ def test_default_samsung_G950U_init( ip, samsung_G950U_app ):
   assert browser.webkit == '537.36'
   assert browser.version == '87.0.4280.101'
 
-def test_default_samsung_G981U1_init( ip, samsung_G981U1_app ):
+def test_default_samsung_G981U1_init( samsung_G981U1_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    samsung_G981U1_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    visitor_id, samsung_G981U1_app, 100, 200, '2020-01-01T00:00:00.000Z',
     dateAdded = currentTime
   )
   assert browser.app == samsung_G981U1_app
-  assert browser.ip == ip
+  assert browser.id == visitor_id
   assert browser.width == 100
   assert browser.height == 200
   assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
@@ -58,14 +60,14 @@ def test_default_samsung_G981U1_init( ip, samsung_G981U1_app ):
   assert browser.webkit == '537.36'
   assert browser.version == '13.0'
 
-def test_default_mac_chrome_init( ip, mac_chrome_app ):
+def test_default_mac_chrome_init( mac_chrome_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    mac_chrome_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    visitor_id, mac_chrome_app, 100, 200, '2020-01-01T00:00:00.000Z',
     dateAdded = currentTime
   )
   assert browser.app == mac_chrome_app
-  assert browser.ip == ip
+  assert browser.id == visitor_id
   assert browser.width == 100
   assert browser.height == 200
   assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
@@ -77,14 +79,14 @@ def test_default_mac_chrome_init( ip, mac_chrome_app ):
   assert browser.webkit == '537.36'
   assert browser.version == '87.0.4280.88'
 
-def test_default_mac_safari_init( ip, mac_safari_app ):
+def test_default_mac_safari_init( mac_safari_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    mac_safari_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    visitor_id, mac_safari_app, 100, 200, '2020-01-01T00:00:00.000Z',
     dateAdded = currentTime
   )
   assert browser.app == mac_safari_app
-  assert browser.ip == ip
+  assert browser.id == visitor_id
   assert browser.width == 100
   assert browser.height == 200
   assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
@@ -96,14 +98,14 @@ def test_default_mac_safari_init( ip, mac_safari_app ):
   assert browser.webkit == '605.1.15'
   assert browser.version == '14.0.2'
 
-def test_default_windows_chrome_init( ip, windows_chrome_app ):
+def test_default_windows_chrome_init( windows_chrome_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    windows_chrome_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    visitor_id, windows_chrome_app, 100, 200, '2020-01-01T00:00:00.000Z',
     dateAdded = currentTime
   )
   assert browser.app == windows_chrome_app
-  assert browser.ip == ip
+  assert browser.id == visitor_id
   assert browser.width == 100
   assert browser.height == 200
   assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
@@ -115,14 +117,14 @@ def test_default_windows_chrome_init( ip, windows_chrome_app ):
   assert browser.webkit == '537.36'
   assert browser.version == '87.0.4280.88'
 
-def test_default_iphone_safari_init( ip, iphone_safari_app ):
+def test_default_iphone_safari_init( iphone_safari_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    iphone_safari_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    visitor_id, iphone_safari_app, 100, 200, '2020-01-01T00:00:00.000Z',
     dateAdded = currentTime
   )
   assert browser.app == iphone_safari_app
-  assert browser.ip == ip
+  assert browser.id == visitor_id
   assert browser.width == 100
   assert browser.height == 200
   assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
@@ -134,14 +136,14 @@ def test_default_iphone_safari_init( ip, iphone_safari_app ):
   assert browser.webkit == '605.1.15'
   assert browser.version == '14.0.2'
 
-def test_default_iphone_linkedin_init( ip, iphone_linkedin_app ):
+def test_default_iphone_linkedin_init( iphone_linkedin_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    iphone_linkedin_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    visitor_id, iphone_linkedin_app, 100, 200, '2020-01-01T00:00:00.000Z',
     dateAdded = currentTime
   )
   assert browser.app == iphone_linkedin_app
-  assert browser.ip == ip
+  assert browser.id == visitor_id
   assert browser.width == 100
   assert browser.height == 200
   assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
@@ -153,13 +155,13 @@ def test_default_iphone_linkedin_init( ip, iphone_linkedin_app ):
   assert browser.webkit == '605.1.15'
   assert browser.version is None
 
-def test_default_unknown_init( ip ):
+def test_default_unknown_init():
   currentTime = datetime.datetime.now()
   browser = Browser(
-    'unknown', ip, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
+    visitor_id, 'unknown', 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
   )
   assert browser.app == 'unknown'
-  assert browser.ip == ip
+  assert browser.id == visitor_id
   assert browser.width == 100
   assert browser.height == 200
   assert browser.dateVisited == datetime.datetime( 2020, 1, 1, 0, 0, 0 )
@@ -171,30 +173,30 @@ def test_default_unknown_init( ip ):
   assert browser.webkit is None
   assert browser.version is None
 
-def test_key( ip, pixel_app ):
+def test_key( pixel_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    pixel_app, ip, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
+    visitor_id, pixel_app, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
   )
   assert browser.key() == {
-    'PK': { 'S': f'VISITOR#{ ip }' },
+    'PK': { 'S': f'VISITOR#{ visitor_id }' },
     'SK': { 'S': 'BROWSER#2020-01-01T00:00:00.000Z' }
   }
 
-def test_pk( ip, pixel_app ):
+def test_pk( pixel_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    pixel_app, ip, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
+    visitor_id, pixel_app, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
   )
-  assert browser.pk() == { 'S': f'VISITOR#{ ip }' }
+  assert browser.pk() == { 'S': f'VISITOR#{ visitor_id }' }
 
-def test_toItem( ip, pixel_app ):
+def test_toItem( pixel_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    pixel_app, ip, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
+    visitor_id, pixel_app, 100, 200, '2020-01-01T00:00:00.000Z', dateAdded = currentTime
   )
   assert browser.toItem() == {
-    'PK': { 'S': f'VISITOR#{ ip }' },
+    'PK': { 'S': f'VISITOR#{ visitor_id }' },
     'SK': { 'S': 'BROWSER#2020-01-01T00:00:00.000Z' },
     'Type': { 'S': 'browser' },
     'App': { 'S': pixel_app },
@@ -211,21 +213,21 @@ def test_toItem( ip, pixel_app ):
       + currentTime.strftime('%f')[:3] + 'Z' }
   }
 
-def test_repr( ip, pixel_app ):
+def test_repr( pixel_app ):
   assert repr( Browser(
-    pixel_app, ip, 100, 200, '2020-01-01T00:00:00.000Z'
-  ) ) == f'{ ip } - chrome'
+    visitor_id, pixel_app, 100, 200, '2020-01-01T00:00:00.000Z'
+  ) ) == f'{ visitor_id } - chrome'
 
-def test_itemToBrowser( ip, pixel_app ):
+def test_itemToBrowser( pixel_app ):
   currentTime = datetime.datetime.now()
   browser = Browser(
-    pixel_app, ip, 100, 200, '2020-01-01T00:00:00.000Z',
+    visitor_id, pixel_app, 100, 200, '2020-01-01T00:00:00.000Z',
     dateAdded = currentTime.strftime( '%Y-%m-%dT%H:%M:%S.' ) \
       + currentTime.strftime('%f')[:3] + 'Z'
   )
   newBrowser = itemToBrowser( browser.toItem() )
+  assert browser.id == newBrowser.id
   assert browser.app == newBrowser.app
-  assert browser.ip == newBrowser.ip
   assert browser.width == newBrowser.width
   assert browser.height == newBrowser.height
   assert browser.dateVisited == newBrowser.dateVisited

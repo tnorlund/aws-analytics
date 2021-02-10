@@ -44,7 +44,7 @@ class Browser:
     Returns the browser as a parsed DynamoDB item.
   '''
   def __init__(
-    self, app, ip, width, height, dateVisited, device = None,
+    self, visitor_id, app, width, height, dateVisited, device = None,
     deviceType = None, browser = None, os = None,  webkit = None,
     version = None, dateAdded = datetime.datetime.now()
   ):
@@ -79,8 +79,8 @@ class Browser:
     dateAdded : datetime.datetime | str
       The datetime the browser was added to the table.
     '''
+    self.id = visitor_id
     self.app = app
-    self.ip = ip
     self.width = int( width )
     self.height = int( height )
     self.dateVisited = dateVisited \
@@ -109,7 +109,7 @@ class Browser:
       self.os = os
       self.webkit = webkit
       self.version = version
-      self.ip = ip
+      self.id = visitor_id
       self.dateAdded = dateAdded
 
   def key( self ):
@@ -118,7 +118,7 @@ class Browser:
     This is used to retrieve the unique browser from the table.
     '''
     return( {
-      'PK': { 'S': f'VISITOR#{ self.ip }' },
+      'PK': { 'S': f'VISITOR#{ self.id }' },
       'SK': { 'S': f'BROWSER#{ formatDate( self.dateVisited ) }' }
     } )
 
@@ -127,7 +127,7 @@ class Browser:
 
     This is used to retrieve the visitor-specific data from the table.
     '''
-    return { 'S': f'VISITOR#{ self.ip }' }
+    return { 'S': f'VISITOR#{ self.id }' }
 
   def toItem( self ):
     '''Returns the browser as a parsed DynamoDB item.
@@ -154,11 +154,11 @@ class Browser:
     } )
 
   def __repr__( self ):
-    return f"{ self.ip } - { self.browser }"
+    return f"{ self.id } - { self.browser }"
 
   def __iter__( self ):
     yield 'app', self.app
-    yield 'ip', self.ip
+    yield 'id', self.id
     yield 'dateVisited', self.dateVisited
     yield 'width', self.width
     yield 'height', self.height
@@ -306,7 +306,7 @@ def itemToBrowser( item ):
   '''
   try:
     return Browser(
-      item['App']['S'], item['PK']['S'].split('#')[1], item['Width']['N'],
+      item['PK']['S'].split('#')[1], item['App']['S'], item['Width']['N'],
       item['Height']['N'], item['DateVisited']['S'],
       None if 'NULL' in item['Device'].keys() else item['Device']['S'],
       None if 'NULL' in item['DeviceType'].keys() else item['DeviceType']['S'],

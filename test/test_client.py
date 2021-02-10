@@ -8,28 +8,28 @@ from dynamo.data import DynamoClient # pylint: disable=wrong-import-position
 
 @pytest.fixture
 def visitor():
-  return Visitor( '0.0.0.0' )
+  return Visitor( '171a0329-f8b2-499c-867d-1942384ddd5f' )
 
 @pytest.fixture
 def visit():
   return Visit(
-    '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+    '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-12-23T20:32:26.000Z', '0', 'Tyler Norlund', '/',
     '2020-12-23T20:32:26.000Z'
   )
 
 @pytest.fixture
 def session():
-  return Session( '2020-01-01T00:00:00.000Z', '0.0.0.0', 60.0, 60.0 )
+  return Session( '2020-01-01T00:00:00.000Z', '171a0329-f8b2-499c-867d-1942384ddd5f', 60.0, 60.0 )
 
 @pytest.fixture
 def visits():
   return[
     Visit(
-      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-01T00:01:00.000Z', '0.0.0.0', '0', 'Blog', '/blog',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-01T00:01:00.000Z', '0', 'Blog', '/blog',
       '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     )
   ]
@@ -38,15 +38,15 @@ def visits():
 def year_visits():
   return [
     Visit(
-      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-01T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-01T00:00:01.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '2020-01-01T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     )
 ]
@@ -55,19 +55,19 @@ def year_visits():
 def month_visits():
   return [
     Visit(
-      '2020-01-01T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '2020-01-25T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-25T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     ),
     Visit(
-      '2020-01-30T00:00:00.000Z', '0.0.0.2', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5s', '2020-01-30T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-01T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     )
   ]
@@ -76,15 +76,15 @@ def month_visits():
 def week_visits():
   return [
     Visit(
-      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-03T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '2020-01-04T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-04T00:00:00.000Z', '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     ),
   ]
@@ -93,15 +93,15 @@ def week_visits():
 def day_visits():
   return [
     Visit(
-      '2020-01-03T00:00:00.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-01-03T00:00:00.000Z',  '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', '60', None, None, 'Blog', '/blog'
     ),
     Visit(
-      '2020-01-03T00:00:01.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z',  '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', None, 'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '2020-01-03T00:00:00.000Z', '0.0.0.1', '0', 'Tyler Norlund', '/',
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:00.000Z',  '0', 'Tyler Norlund', '/',
       '2020-01-03T00:00:00.000Z', '120', None, None, 'Resume', '/resume'
     ),
   ]
@@ -109,26 +109,29 @@ def day_visits():
 @pytest.fixture
 def browser():
   return Browser(
+    '171a0329-f8b2-499c-867d-1942384ddd5f',
     'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
       'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 ' + \
       'Mobile/15E148 Safari/604.1',
-    '0.0.0.0', 100, 200, '2020-01-01T00:00:00.000Z'
+    100, 200, '2020-01-01T00:00:00.000Z'
   )
 
 @pytest.fixture
 def browsers():
   return[
     Browser(
+      '171a0329-f8b2-499c-867d-1942384ddd5f',
       'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
         'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 ' + \
         'Mobile/15E148 Safari/604.1',
-      '0.0.0.0', 100, 200, '2020-01-01T00:00:00.000Z',
+      100, 200, '2020-01-01T00:00:00.000Z',
       dateAdded = '2020-01-01T00:00:00.000Z'
     ),
     Browser(
+      '171a0329-f8b2-499c-867d-1942384ddd5f',
       'Mozilla/5.0 (Linux; Android 11; Pixel 4 XL) AppleWebKit/537.36 ' + \
         '(KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36',
-      '0.0.0.0', 100, 200, '2020-01-01T00:01:00.000Z',
+      100, 200, '2020-01-01T00:01:00.000Z',
       dateAdded = '2020-01-01T00:00:00.000Z'
     )
   ]
@@ -141,7 +144,7 @@ def year( year_visits ):
     year_visits[0].slug,
     year_visits[0].title,
     year_visits[0].date.strftime( '%Y' ),
-    len( { visit.ip for visit in year_visits } ),
+    len( { visit.id for visit in year_visits } ),
     np.mean( [
         visit.timeOnPage for visit in year_visits
         if visit.timeOnPage is not None
@@ -169,7 +172,7 @@ def month( month_visits ):
     month_visits[0].slug,
     month_visits[0].title,
     month_visits[0].date.strftime( '%Y-%m' ),
-    len( { visit.ip for visit in month_visits } ),
+    len( { visit.id for visit in month_visits } ),
     np.mean( [
         visit.timeOnPage for visit in month_visits
         if visit.timeOnPage is not None
@@ -197,7 +200,7 @@ def week( week_visits ):
     week_visits[0].slug,
     week_visits[0].title,
     week_visits[0].date.strftime( '%Y-%U' ),
-    len( { visit.ip for visit in week_visits } ),
+    len( { visit.id for visit in week_visits } ),
     np.mean( [
         visit.timeOnPage for visit in week_visits
         if visit.timeOnPage is not None
@@ -225,7 +228,7 @@ def day( day_visits ):
     day_visits[0].slug,
     day_visits[0].title,
     day_visits[0].date.strftime( '%Y-%m-%d' ),
-    len( { visit.ip for visit in day_visits } ),
+    len( { visit.id for visit in day_visits } ),
     np.mean( [
         visit.timeOnPage for visit in day_visits
         if visit.timeOnPage is not None
@@ -252,7 +255,7 @@ def page( year_visits ):
   return Page(
     year_visits[0].slug,
     year_visits[0].title,
-    len( { visit.ip for visit in year_visits } ),
+    len( { visit.id for visit in year_visits } ),
     np.mean( [
         visit.timeOnPage for visit in year_visits
         if visit.timeOnPage is not None
@@ -493,7 +496,7 @@ def test_addNewSession(
   assert 'visits' in result.keys()
   assert result['visits'] == visits
   assert 'session' in result.keys()
-  assert result['session'].ip == visitor.ip
+  assert result['session'].id == visitor.id
   assert result['session'].sessionStart == visits[0].date
 
 def test_visitor_addNewSession(
@@ -529,7 +532,7 @@ def test_getSessionDetails(
     for index in range( len( visits ) )
   ] )
   assert 'session' in result.keys()
-  assert result['session'].ip == visitor.ip
+  assert result['session'].id == visitor.id
   assert result['session'].sessionStart == visits[0].date
 
 def test_table_getSessionDetails(
@@ -620,7 +623,7 @@ def test_parameter_title_addYear(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addYear( year_visits + [
       Visit(
-        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-12-23T20:32:26.000Z', '0', 'Blog', '/',
         '2020-12-23T20:32:26.000Z'
       )
     ] )
@@ -632,7 +635,7 @@ def test_parameter_year_addYear(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addYear( year_visits + [
       Visit(
-        '2021-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+        '171a0329-f8b2-499c-867d-1942384ddd5f', '2021-12-23T20:32:26.000Z', '0', 'Tyler Norlund', '/',
         '2020-12-23T20:32:26.000Z'
       )
     ] )
@@ -666,7 +669,7 @@ def test_parameter_title_addMonth(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addMonth( month_visits + [
       Visit(
-        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-12-23T20:32:26.000Z', '0', 'Resume', '/',
         '2020-12-23T20:32:26.000Z'
       )
     ] )
@@ -678,7 +681,7 @@ def test_parameter_year_addMonth(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addMonth( month_visits + [
       Visit(
-        '2021-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+        '171a0329-f8b2-499c-867d-1942384ddd5f', '2021-12-23T20:32:26.000Z', '0', 'Tyler Norlund', '/',
         '2020-12-23T20:32:26.000Z'
       )
     ] )
@@ -712,7 +715,7 @@ def test_parameter_title_addWeek(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addWeek( week_visits + [
       Visit(
-        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-12-23T20:32:26.000Z', '0', 'Resume', '/',
         '2020-12-23T20:32:26.000Z'
       )
     ] )
@@ -724,7 +727,7 @@ def test_parameter_year_addWeek(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addWeek( week_visits + [
       Visit(
-        '2021-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+        '171a0329-f8b2-499c-867d-1942384ddd5f', '2021-12-23T20:32:26.000Z', '0', 'Tyler Norlund', '/',
         '2020-12-23T20:32:26.000Z'
       )
     ] )
@@ -758,7 +761,7 @@ def test_parameter_title_addDay(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addDay( day_visits + [
       Visit(
-        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-12-23T20:32:26.000Z', '0', 'Resume', '/',
         '2020-12-23T20:32:26.000Z'
       )
     ] )
@@ -770,7 +773,7 @@ def test_parameter_year_addDay(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addDay( day_visits + [
       Visit(
-        '2021-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Tyler Norlund', '/',
+        '171a0329-f8b2-499c-867d-1942384ddd5f', '2021-12-23T20:32:26.000Z', '0', 'Tyler Norlund', '/',
         '2020-12-23T20:32:26.000Z'
       )
     ] )
@@ -805,7 +808,7 @@ def test_parameter_title_addPage(
   with pytest.raises( ValueError ) as e:
     assert DynamoClient( table_name ).addPage( year_visits + [
       Visit(
-        '2020-12-23T20:32:26.000Z', '0.0.0.0', '0', 'Resume', '/',
+        '171a0329-f8b2-499c-867d-1942384ddd5f', '2020-12-23T20:32:26.000Z', '0', 'Resume', '/',
         '2020-12-23T20:32:26.000Z'
       )
     ] )
