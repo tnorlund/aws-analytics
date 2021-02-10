@@ -48,8 +48,8 @@ class Location:
     Returns the location as a parsed DynamoDB item.
   '''
   def __init__(
-    self, visitor_id, ip, country, region, city, latitude, longitude, postalCode, timezone,
-    domains, autonomousSystem, isp, proxy, vpn, tor,
+    self, visitor_id, ip, country, region, city, latitude, longitude,
+    postalCode, timezone, domains, autonomousSystem, isp, proxy, vpn, tor,
     dateAdded = datetime.datetime.now()
   ):
     '''Constructs the necessary attributes for the location object.
@@ -199,8 +199,9 @@ def requestToLocation( req, visitor_id ):
   '''
   try:
     return Location(
-      visitor_id, req['ip'], req['location']['country'], req['location']['region'],
-      req['location']['city'], req['location']['lat'], req['location']['lng'],
+      visitor_id, req['ip'], req['location']['country'],
+      req['location']['region'], req['location']['city'],
+      req['location']['lat'], req['location']['lng'],
       req['location']['postalCode'], req['location']['timezone'],
       None if 'domains' not in req.keys() else req['domains'],
       req['as'] if 'as' in req else None, req['isp'],
@@ -230,7 +231,9 @@ def itemToLocation( item ):
   '''
   try:
     return Location(
-      item['PK']['S'].split('#')[1], item['IP']['S'], item['Country']['S'], item['Region']['S'],
+      item['PK']['S'].split('#')[1],
+      item['IP']['S'],
+      item['Country']['S'], item['Region']['S'],
       item['City']['S'], float( item['Latitude']['N'] ),
       float( item['Longitude']['N'] ),
       None if 'NULL' in item['PostalCode'].keys() else item['PostalCode']['S'],

@@ -144,7 +144,7 @@ def itemToSession( item ):
     return Session(
       datetime.datetime.strptime(
         item['SK']['S'].split('#')[1], '%Y-%m-%dT%H:%M:%S.%fZ'
-      ), 
+      ),
       item['PK']['S'].split('#')[1],
       None if 'NULL' in item['AverageTime'].keys() \
         else float( item['AverageTime']['N'] ),
