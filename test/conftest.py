@@ -139,7 +139,7 @@ next_title = 'Continuous Integration and Continuous Delivery'
 next_slug = '/blog/cicd'
 # The number of seconds the average page was on
 avg_time = 2.826
-# The length of the session 
+# The length of the session
 total_time = 8.478
 
 @pytest.fixture
@@ -258,20 +258,23 @@ def visits():
   return[
     Visit(
       visitor_id, session_start, '0', 'Tyler Norlund', '/',
-      session_start, scroll_events, '1.647', nextTitle='Resume', nextSlug='/resume'
+      session_start, scroll_events, '1.647', nextTitle='Resume',
+      nextSlug='/resume'
     ),
     Visit(
       visitor_id, '2021-02-10T11:27:51.216Z', '0', 'Resume', '/resume',
-      session_start, scroll_events, '3.084', 
+      session_start, scroll_events, '3.084',
       prevTitle='Tyler Norlund', prevSlug='/',
-      nextTitle='Continuous Integration and Continuous Delivery', nextSlug='/blog/cicd'
+      nextTitle='Continuous Integration and Continuous Delivery',
+      nextSlug='/blog/cicd'
     ),
     Visit(
-      visitor_id, '2021-02-10T11:27:57.886Z', '0', 
+      visitor_id, '2021-02-10T11:27:57.886Z', '0',
       'Continuous Integration and Continuous Delivery', '/blog/cicd',
-      session_start, scroll_events, 
-      timeOnPage='3.747', 
-      prevTitle='Continuous Integration and Continuous Delivery', prevSlug='/blog/cicd'
+      session_start, scroll_events,
+      timeOnPage='3.747',
+      prevTitle='Continuous Integration and Continuous Delivery',
+      prevSlug='/blog/cicd'
     )
   ]
 
@@ -279,7 +282,7 @@ def visits():
 def browsers():
   return[
     Browser(
-      visitor_id, 
+      visitor_id,
       'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) ' + \
         'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 ' + \
         'Mobile/15E148 Safari/604.1',
@@ -287,7 +290,7 @@ def browsers():
       dateAdded = '2020-01-01T00:00:00.000Z'
     ),
     Browser(
-      visitor_id, 
+      visitor_id,
       'Mozilla/5.0 (Linux; Android 11; Pixel 4 XL) AppleWebKit/537.36 ' + \
         '(KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36',
       100, 200, '2020-01-01T00:01:00.000Z',
@@ -300,15 +303,20 @@ def year_visits():
   return [
     Visit(
       visitor_id, '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-01T00:00:00.000Z', scroll_events, '60', None, None, 'Blog', '/blog'
+      '2020-01-01T00:00:00.000Z', scroll_events, '60', None, None,
+      'Blog', '/blog'
     ),
     Visit(
-      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-01T00:00:01.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-01T00:00:00.000Z', scroll_events, None, 'Tyler Norlund', '/', None, None
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-01T00:00:01.000Z', '0',
+      'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', scroll_events, None,
+      'Tyler Norlund', '/', None, None
     ),
     Visit(
-      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-01T00:00:00.000Z', scroll_events, '120', None, None, 'Resume', '/resume'
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-01T00:00:00.000Z', '0',
+      'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', scroll_events, '120', None, None,
+      'Resume', '/resume'
     )
 ]
 
@@ -317,19 +325,26 @@ def month_visits():
   return [
     Visit(
       visitor_id, '2020-01-01T00:00:00.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-01T00:00:00.000Z', scroll_events, '60', None, None, 'Blog', '/blog'
+      '2020-01-01T00:00:00.000Z', scroll_events, '60', None, None,
+      'Blog', '/blog'
     ),
     Visit(
-      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-01T00:00:00.000Z', scroll_events, None, 'Tyler Norlund', '/', None, None
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z', '0',
+      'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', scroll_events, None, 'Tyler Norlund', '/',
+      None, None
     ),
     Visit(
-      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-25T00:00:00.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-01T00:00:00.000Z', scroll_events, '120', None, None, 'Resume', '/resume'
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-25T00:00:00.000Z', '0',
+      'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', scroll_events, '120', None, None,
+      'Resume', '/resume'
     ),
     Visit(
-      '171a0329-f8b2-499c-867d-1942384ddd5s', '2020-01-30T00:00:00.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-01T00:00:00.000Z', scroll_events, '120', None, None, 'Resume', '/resume'
+      '171a0329-f8b2-499c-867d-1942384ddd5s', '2020-01-30T00:00:00.000Z', '0',
+      'Tyler Norlund', '/',
+      '2020-01-01T00:00:00.000Z', scroll_events, '120', None, None,
+      'Resume', '/resume'
     )
   ]
 
@@ -338,15 +353,20 @@ def week_visits():
   return [
     Visit(
       visitor_id, '2020-01-03T00:00:00.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-03T00:00:00.000Z', scroll_events, '60', None, None, 'Blog', '/blog'
+      '2020-01-03T00:00:00.000Z', scroll_events, '60', None, None,
+      'Blog', '/blog'
     ),
     Visit(
-      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-03T00:00:00.000Z', scroll_events, None, 'Tyler Norlund', '/', None, None
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z', '0',
+      'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', scroll_events, None, 'Tyler Norlund', '/',
+      None, None
     ),
     Visit(
-      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-04T00:00:00.000Z', '0', 'Tyler Norlund', '/',
-      '2020-01-03T00:00:00.000Z', scroll_events, '120', None, None, 'Resume', '/resume'
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-04T00:00:00.000Z', '0',
+      'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', scroll_events, '120', None, None,
+      'Resume', '/resume'
     ),
   ]
 
@@ -355,15 +375,20 @@ def day_visits():
   return [
     Visit(
       visitor_id, '2020-01-03T00:00:00.000Z',  '0', 'Tyler Norlund', '/',
-      '2020-01-03T00:00:00.000Z', scroll_events, '60', None, None, 'Blog', '/blog'
+      '2020-01-03T00:00:00.000Z', scroll_events, '60', None, None,
+      'Blog', '/blog'
     ),
     Visit(
-      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z',  '0', 'Tyler Norlund', '/',
-      '2020-01-03T00:00:00.000Z', scroll_events, None, 'Tyler Norlund', '/', None, None
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:01.000Z',  '0',
+      'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', scroll_events, None, 'Tyler Norlund', '/',
+      None, None
     ),
     Visit(
-      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:00.000Z',  '0', 'Tyler Norlund', '/',
-      '2020-01-03T00:00:00.000Z', scroll_events, '120', None, None, 'Resume', '/resume'
+      '171a0329-f8b2-499c-867d-1942384ddd5a', '2020-01-03T00:00:00.000Z',  '0',
+      'Tyler Norlund', '/',
+      '2020-01-03T00:00:00.000Z', scroll_events, '120', None, None,
+      'Resume', '/resume'
     ),
   ]
 
