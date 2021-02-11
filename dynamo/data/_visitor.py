@@ -112,7 +112,7 @@ class _Visitor:
     if len( visits ) == 1:
       totalTime = None
     else:
-      totalTime = ( visits[-1].date - visits[0].date ).total_seconds()
+      totalTime = np.sum( [ visit.timeOnPage for visit in visits ] )
     session = Session(
       visits[0].date, visits[0].id, averageTime, totalTime
     )

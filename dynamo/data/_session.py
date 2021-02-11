@@ -221,7 +221,7 @@ class _Session():
     if len( visits ) == 1:
       totalTime = None
     else:
-      totalTime = ( visits[-1].date - visits[0].date ).total_seconds()
+      totalTime = np.sum( [ visit.timeOnPage for visit in visits ] )
     session = Session(
       visits[0].date, visits[0].id, averageTime, totalTime
     )
@@ -237,5 +237,6 @@ class _Session():
       if print_error:
         print( f'ERROR updateSession: { e }' )
       if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+        print( 'updateSession', session )
         return { 'error': f'Session not in table { session }' }
       return { 'error': 'Could not update session in table' }

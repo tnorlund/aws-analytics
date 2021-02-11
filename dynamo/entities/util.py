@@ -1,4 +1,23 @@
+import time
 import re
+
+def formatEpoch( epoch ):
+  '''Formats a epoch timestamp to a string like JS's ISO standard.
+
+  Parameters
+  ----------
+  epoch: int
+    The epoch requested to format
+
+  Returns
+  -------
+  formattedDate : str
+    The formatted datetime string that is similar to JS's ISO standard.
+  '''
+  return time.strftime(
+    '%Y-%m-%dT%H:%M:%S.',
+    time.localtime(epoch / 1000 )
+  ) + str( epoch )[-3:] + 'Z'
 
 def formatDate( date ):
   '''Formats a datetime object to a string like JS's ISO standard.

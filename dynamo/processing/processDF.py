@@ -1,64 +1,100 @@
 import os
 import sys
+import io
 import numpy as np
 import pandas as pd
 sys.path.append(
   os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 )
-from dynamo.entities import Visit, Browser # pylint: disable=wrong-import-position
+from dynamo.entities import Visit, Browser, Session, formatEpoch # pylint: disable=wrong-import-position
 
-def processDF( df, ip ):
-  '''Cleans the given dataframe to only have the data of the given IP address.
+def processDF( key, s3_client ):
+  '''Reads a raw csv file S3 and parses the browsers, visits, and sessions.
 
   Parameters
   ----------
-  df : pd.DataFrame
-    The raw dataframe from the original '.parquet' file.
-  ip : str
-    The IP address of the requested visitor.
+  key : str
+    The key of the '.parquet' file in the S3 bucket.
+  s3_client : S3Client
+    The S3 client used to get the '.parquet' file from.
 
   Returns
   -------
   result : dict
-    A dictionary that contains both the browsers and visits related to the
-    given IP address.
+    The browsers, visits, and sessions parsed from the file.
   '''
-  v_df = df[df['ip'] == ip].drop_duplicates().sort_values( by='id' ) \
-    .reset_index()
-  # Format the datetimes to be dates and then calculate the amount of time
-  # between each request.
-  v_df['seconds'] = pd.to_datetime(
-    v_df['id'],
-    format='%Y-%m-%dT%H:%M:%S.%fZ'
-  ).diff(+1).dt.total_seconds()[1:].append(
-    pd.Series( [ None ] )
-  ).reset_index()[0]
-  # Shift the slugs and title up and down in order to associate the
-  # previous and next slugs and titles per each visit.
-  v_df['prevSlug'] = v_df['slug'].shift( 1 )
-  v_df['prevTitle'] = v_df['title'].shift( 1 )
-  v_df['nextSlug'] = v_df['slug'].shift( -1 )
-  v_df['nextTitle'] = v_df['title'].shift( -1 )
-  # Get the indexes of the times when the visitor spent over 30 minutes on
-  # a specific page.
-  indexes = v_df.loc[ v_df['seconds'] > ( 60 * 30 ) ].index
-  v_df.loc[ indexes, ['seconds', 'nextSlug', 'nextTitle']] = None
-  v_df.loc[indexes + 1, ['prevSlug', 'prevTitle']] = None
-  # Replace the NaN's with the None type for the entities
-  v_df = v_df.replace( { np.nan: None } )
-  # Parse the visits from the visitor's DF.
-  visits = [
-    Visit(
-      row['id'], row['ip'], row['user'], row['title'], row['slug'],
-      v_df.iloc[0]['id'], row['seconds'], row['prevTitle'],
-      row['prevSlug'], row['nextTitle'], row['nextSlug']
-    ) for index, row in v_df.iterrows()
+  request = s3_client.getObject( key )
+  # Read the parquet file as a pandas DF
+  df = pd.read_csv(
+    io.BytesIO( request['Body'].read() ),
+    sep = ',\t', engine = 'python',
+    names = [
+      'process', 'id', 'time', 'title', 'slug', 'userAgent', 'width',
+      'height', 'x', 'y'
+    ],
+    usecols = [
+      'id', 'time', 'title', 'slug', 'userAgent', 'width', 'height', 'x', 'y'
+    ],
+    index_col = 'time'
+  )
+  df = df.drop_duplicates().sort_index()
+  index_change = df.ne(
+    df.shift()
+  ).apply( lambda x: x.index[x].tolist() ).title
+  indexes = [
+    ( index_change[index], index_change[index + 1] - 1 )
+      if index != len( index_change ) - 1
+    else (index_change[index], df.tail(1).index[0])
+    for index in  range( len( index_change ) )
   ]
-  # Parse the browsers from the visitor's DF.
+  visits = []
+  for ( start, stop ) in indexes:
+    temp = df.loc[ start: stop ]
+    visits.append(
+      Visit(
+        temp.id.unique()[0],
+        formatEpoch( temp.iloc[[0]].index[0] ),
+        '0',
+        temp.title.unique()[0],
+        temp.slug.unique()[0],
+        formatEpoch( temp.iloc[[0]].index[0] ),
+        {
+          formatEpoch( index ): { 'x': row.x, 'y': row.y }
+          for index, row in temp.iterrows()
+        },
+        ( temp.iloc[[-1]].index[0] - temp.iloc[[0]].index[0] ) / 1000
+      )
+    )
+  for visit in visits:
+    visit.sessionStart=visits[0].date
+  for index in range( 1, len( visits ) ):
+    visits[index - 1].nextTitle = visits[index].title
+    visits[index - 1].nextSlug = visits[index].slug
+  for index in range( len( visits ) - 1 ):
+    visits[index + 1].prevTitle = visits[index].title
+    visits[index + 1].prevSlug = visits[index].slug
+  session = Session(
+    visits[0].sessionStart,
+    df.id.unique()[0],
+    np.mean( [ visit.timeOnPage for visit in visits ] ),
+    np.sum( [ visit.timeOnPage for visit in visits ] )
+  )
   browsers = [
-    Browser( row['app'], row['ip'], row['width'], row['height'], row['id'] )
-    for index, row in v_df.loc[
-      v_df[ ['app', 'width', 'height'] ].drop_duplicates().dropna().index
-    ].iterrows()
+    Browser(
+      df.id.unique()[0],
+      row.userAgent,
+      row.width,
+      row.height,
+      formatEpoch(
+        df.loc[
+          ( df['height'] == row.height ) & ( df['width'] == row.width )
+        ].head(1).index[0]
+      )
+    )
+    for index, row in df.groupby(
+      ['userAgent','height','width']
+    ).size().reset_index().rename(
+      columns={0:'count'}
+    ).iterrows()
   ]
-  return { 'visits': visits, 'browsers': browsers }
+  return{ 'visits': visits, 'session': session, 'browsers': browsers }

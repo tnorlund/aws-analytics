@@ -2,79 +2,93 @@ import datetime
 import pytest
 from dynamo.entities import Session, itemToSession # pylint: disable=wrong-import-position
 
+# The unique visitor ID
 visitor_id = '171a0329-f8b2-499c-867d-1942384ddd5f'
+# The time when the session began
+session_start = '2021-02-10T11:27:43.262Z'
+# The number of seconds the average page was on
+avg_time = 2.826
+# The length of the session
+total_time = 8.478
 
 def test_default_init():
-  session = Session( '2020-01-01T00:00:00.000Z', visitor_id, 0.1, 0.1 )
-  assert session.sessionStart == datetime.datetime( 2020, 1, 1, 0, 0 )
+  session = Session( session_start, visitor_id, avg_time, total_time )
+  assert session.sessionStart == datetime.datetime.strptime(
+    session_start, '%Y-%m-%dT%H:%M:%S.%fZ'
+  )
   assert session.id == visitor_id
-  assert session.avgTime == 0.1
-  assert session.totalTime == 0.1
+  assert session.avgTime == avg_time
+  assert session.totalTime == total_time
 
 def test_datetime_init():
   session = Session(
-    datetime.datetime( 2020, 1, 1, 0, 0 ), visitor_id, 0.1, 0.1
+    datetime.datetime.strptime(
+      session_start, '%Y-%m-%dT%H:%M:%S.%fZ'
+    ), 
+    visitor_id, avg_time, total_time
   )
-  assert session.sessionStart == datetime.datetime( 2020, 1, 1, 0, 0 )
+  assert session.sessionStart == datetime.datetime.strptime(
+    session_start, '%Y-%m-%dT%H:%M:%S.%fZ'
+  )
   assert session.id == visitor_id
-  assert session.avgTime == 0.1
-  assert session.totalTime == 0.1
+  assert session.avgTime == avg_time
+  assert session.totalTime == total_time
 
 def test_key():
   session = Session(
-    datetime.datetime( 2020, 1, 1, 0, 0 ), visitor_id, 0.1, 0.1
+    session_start, visitor_id, avg_time, total_time
   )
   assert session.key() == {
     'PK': { 'S': f'VISITOR#{ visitor_id }' },
-    'SK': { 'S': 'SESSION#2020-01-01T00:00:00.000Z' }
+    'SK': { 'S': f'SESSION#{ session_start }' }
   }
 
 def test_pk():
   session = Session(
-    datetime.datetime( 2020, 1, 1, 0, 0 ), visitor_id, 0.1, 0.1
+    session_start, visitor_id, avg_time, total_time
   )
   assert session.pk() == { 'S': f'VISITOR#{ visitor_id }' }
 
 def test_gsi2():
   session = Session(
-    datetime.datetime( 2020, 1, 1, 0, 0 ), visitor_id, 0.1, 0.1
+    session_start, visitor_id, avg_time, total_time
   )
   assert session.gsi2() == {
-    'GSI2PK': { 'S': f'SESSION#{ visitor_id }#2020-01-01T00:00:00.000Z' },
+    'GSI2PK': { 'S': f'SESSION#{ visitor_id }#{ session_start }' },
     'GSI2SK': { 'S': '#SESSION' }
   }
 
 def test_gsi2pk():
   session = Session(
-    datetime.datetime( 2020, 1, 1, 0, 0 ), visitor_id, 0.1, 0.1
+    session_start, visitor_id, avg_time, total_time
   )
   assert session.gsi2pk() == {
-    'S': f'SESSION#{ visitor_id }#2020-01-01T00:00:00.000Z'
+    'S': f'SESSION#{ visitor_id }#{ session_start }'
   }
 
 def test_toItem():
   session = Session(
-    datetime.datetime( 2020, 1, 1, 0, 0 ), visitor_id, 0.1, 0.1
+    session_start, visitor_id, avg_time, total_time
   )
   assert session.toItem() == {
     'PK': { 'S': f'VISITOR#{ visitor_id }' },
-    'SK': { 'S': 'SESSION#2020-01-01T00:00:00.000Z' },
-    'GSI2PK': { 'S': f'SESSION#{ visitor_id }#2020-01-01T00:00:00.000Z' },
+    'SK': { 'S': f'SESSION#{ session_start }' },
+    'GSI2PK': { 'S': f'SESSION#{ visitor_id }#{ session_start }' },
     'GSI2SK': { 'S': '#SESSION' },
     'Type': { 'S': 'session' },
-    'AverageTime': { 'N': '0.1' },
-    'TotalTime': { 'N': '0.1' }
+    'AverageTime': { 'N': str( avg_time ) },
+    'TotalTime': { 'N': str( total_time ) }
   }
 
 def test_repr():
   session = Session(
-    datetime.datetime( 2020, 1, 1, 0, 0 ), visitor_id, 0.1, 0.1
+    session_start, visitor_id, avg_time, total_time
   )
-  assert repr( session ) == f'{ visitor_id } - 0.1'
+  assert repr( session ) == f'{ visitor_id } - { total_time }'
 
 def test_itemToSession():
   session = Session(
-    datetime.datetime( 2020, 1, 1, 0, 0 ), '0.0.0.0', 0.1, 0.1
+    session_start, visitor_id, avg_time, total_time
   )
   newSession = itemToSession( session.toItem() )
   assert newSession.sessionStart == session.sessionStart

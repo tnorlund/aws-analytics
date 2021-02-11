@@ -8,8 +8,8 @@ class Visit:
   ----------
   date : datetime.datetime | str
     The datetime the visitor visited this page
-  ip : str
-    The IP address of the visitor.
+  id : str
+    The unique ID describing the visitor.
   user : int | str
     The user number of the visitor. If the visitor is not logged in, this
     defaults to 0.
@@ -20,6 +20,9 @@ class Visit:
   sessionStart : datetime.datetime | str
     The datetime the visitor started at the website. This is used to provide a
     relationship to the visitor's session.
+  scroll_events : dict
+      The scroll positions over time. This is used to calculate velocity and
+      acceleration.
   prevTitle : str | None
     The title of the previous page visited. When this is the first page of the
     session, the value is None.
@@ -55,13 +58,16 @@ class Visit:
     Returns the visit as a parsed DynamoDB item.
   """
   def __init__(
-    self, visitor_id, date, user, title, slug, sessionStart, timeOnPage=None,
-    prevTitle=None, prevSlug=None, nextTitle=None, nextSlug=None,
+    self, visitor_id, date, user, title, slug, sessionStart, scroll_events,
+    timeOnPage=None, prevTitle=None, prevSlug=None, nextTitle=None,
+    nextSlug=None,
   ):
     '''Constructs the necessary attributes for the visit object.
 
     Parameters
     ----------
+    visitor_id : str
+      The unique ID describing the visitor.
     date : datetime.datetime | str
       The datetime the visitor visited this page
     ip : str
@@ -76,6 +82,9 @@ class Visit:
     sessionStart : datetime.datetime | str
       The datetime the visitor started at the website. This is used to provide a
       relationship to the visitor's session.
+    scroll_events : dict
+      The scroll positions over time. This is used to calculate velocity and
+      acceleration.
     timeOnPage : float | None, optional
       The number of seconds the visitor spent on the page. When this is the last
       page of the session, the value is None. (default is None)
@@ -105,6 +114,7 @@ class Visit:
     self.sessionStart = datetime.datetime.strptime(
       sessionStart, '%Y-%m-%dT%H:%M:%S.%fZ'
     ) if isinstance( sessionStart, str ) else sessionStart
+    self.scrollEvents = scroll_events
     self.prevTitle = prevTitle
     self.prevSlug = prevSlug
     self.nextTitle = nextTitle
@@ -189,6 +199,7 @@ class Visit:
       'User': { 'N': f'{self.user}' },
       'Title': { 'S': self.title },
       'Slug': { 'S': self.slug },
+      'ScrollEvents': objectToItemAtr( self.scrollEvents ),
       'PreviousTitle': objectToItemAtr( self.prevTitle ),
       'PreviousSlug': objectToItemAtr( self.prevSlug ),
       'NextTitle': objectToItemAtr( self.nextTitle ),
@@ -205,6 +216,8 @@ class Visit:
     yield 'user', self.user
     yield 'title', self.title
     yield 'slug', self.slug
+    yield 'scrollEvents', self.scrollEvents
+    yield 'sessionStart', self.sessionStart
     yield 'prevTitle', self.prevTitle
     yield 'prevSlug', self.prevSlug
     yield 'nextTitle', self.nextTitle
@@ -234,6 +247,13 @@ def itemToVisit( item ):
       item['PK']['S'].split('#')[1], item['SK']['S'].split('#')[1],
       int( item['User']['N'] ), item['Title']['S'], item['Slug']['S'],
       item['GSI2PK']['S'].split('#')[2],
+      {
+        key: {
+          'x': int( value['M']['x']['N'] ),
+          'y': int( value['M']['y']['N'] )
+        }
+        for key, value in item['ScrollEvents']['M'].items()
+      },
       np.nan
         if 'NULL' in item['TimeOnPage']
         else float( item['TimeOnPage']['N'] ),

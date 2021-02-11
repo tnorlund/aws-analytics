@@ -199,9 +199,9 @@ class Test_getVisitorDetails():
     result = client.addNewVisitor(
       visitor, location(), browsers, visits
     )
-    print( 'result', result )
+    print( 'result 1', result )
     result = client.getVisitorDetails( visitor )
-    print( 'result', result )
+    print( 'result 2', result )
     assert 'visitor' in result.keys()
     assert dict( result['visitor'] ) == dict( visitor )
     assert 'browsers' in result.keys()

@@ -1,9 +1,12 @@
 from dynamo.entities import Location
 
+# The unique visitor ID
+visitor_id = '79cf921c-c01c-4f05-a875-86e560802930'
+
 def location():
   '''Properly formatted location.'''
   return Location(
-    '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Stockton', 37.9577, -121.29078, '95201',
+    visitor_id, '0.0.0.0', 'US', 'California', 'Stockton', 37.9577, -121.29078, '95201',
     '-08:00', ['c-73-66-102-206.hsd1.ca.comcast.net'],
     {
       'asn': 7922,
@@ -20,7 +23,7 @@ def locations():
   '''Properly formatted locations.'''
   return [
     Location(
-      '171a0329-f8b2-499c-867d-1942384ddd5f', '0.0.0.0', 'US', 'California', 'Stockton', 37.9577, -121.29078, '95201',
+      visitor_id, '0.0.0.0', 'US', 'California', 'Stockton', 37.9577, -121.29078, '95201',
       '-08:00', ['c-73-66-102-206.hsd1.ca.comcast.net'],
       {
         'asn': 7922,
